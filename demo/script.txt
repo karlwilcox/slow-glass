@@ -1,0 +1,146 @@
+# Lego Street in perspective
+
+/* Z depths
+1000 background sky & earth
+950-999 clouds
+900-949 Aerial Objects
+850-899 very distant buildings
+800-850 distant houses etc
+750-799 distant road
+700-749 crossing vehicles
+650-699 medium distance buildings
+600-649 trains
+550-599 near road
+500-549 near buildings
+450-499 near vehicles etc.
+*/
+
+/* Folder locations (all in /data)
+aerial -> aircraft, balloons, clouds
+background -> static images
+sounds -> all sounds (for now...?)
+trains -> locos and carriages
+vehicles -> road traffic
++ others as needed
+*/
+
+begin
+    echo starting main scene
+    make testing 11
+    start planefly
+    # echo $testing $testing
+    # echo (43/4) (   $testing * 2 ) ($testing == 11)
+
+each *:*:30
+each *:*:15
+each *:*:45
+    echo boop $SECOND $MOUSEX $MOUSEY
+    echo A random value from 5 to 20 is (int($CHANCE * 15)+5)
+
+when ("$KEY" == "k")
+    echo You pressed $LASTKEY
+
+at 0:39:50
+    echo beep
+
+on key press f
+    echo $LASTKEY pressed
+
+on key q
+    echo $LASTKEY pressed
+    exit
+
+
+on mouse click
+    echo mouse clicked at $MOUSEX $MOUSEY
+
+every 5 seconds
+    if ($PERCENT > 50) echo Doing something random at $SECOND
+
+scene planefly
+==============
+    begin
+        from aerial
+            load plane.png as plane
+        from
+            load sounds/jetpass2.wav as jetsound
+        place plane at 1000,400,0
+    after 5 seconds
+        show plane
+        play jetsound
+        move plane to 100,800 in a quarter of a minute
+        scale plane by 50,50 in the same time
+        rotate plane to -90 in same
+end scene
+
+
+finish
+
+# Main scene - load & display background
+begin
+    from background
+    load background.png as background
+    load road-distant.png as road-distant
+    load road-near.png as road-near
+    load far-houses-left.png as block-far-l
+    load far-houses-right.png as block-far-r
+    load block-near-right.png as block-near-r
+
+    place background at $CENTREX,$CENTREY,1000
+    place block-far-l at 317,845,800
+    place block-far-r at 776,844,801
+    place road-distant at 497, 1281,750
+    place road-near at 540,1661,550
+    place block-near-r at 935,1021,500
+
+    show background block-far-l block-far-r road-distant road-near block-near-r
+
+scene refuse-truck-rtol
+    begin
+        from vehicles
+        load refuse-truck-rtol.png as refuse-truck-rtol
+        load truckdriveby.wav as truck-noise
+        place refuse-truck-rtol as truck at 1100,1190,720
+        move truck to 0,1190 in 12 seconds
+        show truck
+
+    after 2 seconds
+        play truck-noise
+
+    after 12 seconds
+        hide truck
+        stop
+end scene
+
+scene passenger-train-ltor
+    begin
+        from trains
+        load railroadcrossing.wav as rr-crossing
+        load trainpassslow.wav as train-pass
+        load loco-ltor.png as loco-ltr
+        # load coach-1.png as coach1
+        place loco-ltr at -100,1227,620
+        # start barriers
+        play rr-crossing
+
+    after 3 seconds
+        play train-pass
+        move loco-ltr to 1200,1227 in 10 seconds
+        show loco-ltr
+
+    after 15 seconds
+        hide loco-ltr
+        stop
+endscene
+
+# Main Scene activate
+
+after 5 seconds
+    # if $PERCENT > 50 then start refuse-truck-rtol
+    start refuse-truck-rtol
+
+after 20 seconds
+    start passenger-train-ltor
+
+# after 30 seconds
+#    exit
