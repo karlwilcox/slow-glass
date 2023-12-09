@@ -11,12 +11,6 @@ import commands, args, triggers
 from defaults import *
 
 
-def do_sprites(sprite_list, screen):
-    for tag, sprite in sprite_list.items():
-        sprite.update()
-        sprite.display(screen)
-
-
 def do_actions(data):
     for name, scene in data.scenes.items():
         if scene.enabled:
@@ -78,7 +72,7 @@ def main():
         if this_second != last_second:
             last_second = this_second
             do_actions(globalData)
-        do_sprites(globalData.sprites, screen)
+        globalData.sprites.display_all(screen)
         pygame.display.update()
         fps_clock.tick(FRAMERATE)
 

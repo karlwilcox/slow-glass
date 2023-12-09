@@ -1,5 +1,5 @@
 import dispatcher
-import vars
+import vars, sprites
 from defaults import *
 
 
@@ -8,7 +8,7 @@ class Globals:
     def __init__(self):
         # global data structures
         self.scenes = {}
-        self.sprites = {}
+        self.sprites = sprites.SpriteList()
         self.sounds = {}
         self.images = {}
         self.vars = vars.Variables(self)

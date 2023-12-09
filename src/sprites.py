@@ -2,6 +2,78 @@ import pygame
 from defaults import *
 
 
+class SpriteList:
+
+    def __init__(self):
+        self.sprite_list = []
+        self.tag_list = []
+
+    def get_list(self):
+        return self.sprite_list
+
+    def get_sprite(self, sprite_tag):
+        for sprite in self.sprite_list:
+            if sprite.tag == sprite_tag:
+                return sprite
+        return None
+
+    def get_sprite_index(self, sprite_tag):
+        for sprite_pos in range(0, len(self.sprite_list)):
+            if self.sprite_list[sprite_pos].tag == sprite_tag:
+                return sprite_pos
+        return None
+
+    def sprite_add(self, in_sprite):
+        # Maintain an ordered list of sprites, order by sprite.depth
+        sprite_pos = 0
+        while sprite_pos < len(self.sprite_list):
+            if in_sprite.depth < self.sprite_list[sprite_pos].depth:
+                break
+            sprite_pos += 1
+        self.sprite_list.insert(sprite_pos, in_sprite)
+        self.tag_list.append(in_sprite.tag)
+
+    def sprite_remove(self, sprite_tag):
+        index = self.get_sprite_index(sprite_tag)
+        if index is not None:
+            self.sprite_list.pop(index)
+            self.tag_list.remove(sprite_tag)
+
+    def sprite_set_depth(self, sprite_tag, new_depth):
+        index = self.get_sprite_index(sprite_tag)
+        if index is not None:
+            current = self.sprite_list[index]
+            self.sprite_list.pop(index)
+            current.depth = new_depth
+            self.sprite_add(current)
+
+    def sprite_change_depth(self, sprite_tag, change):
+        index = self.get_sprite_index(sprite_tag)
+        # This only makes sense if there are at least 2 sprites
+        if index is not None and len(self.sprite_list) > 1:
+            current = self.sprite_list[index]
+            self.sprite_list.pop(index)
+            new_index = index + change
+            new_depth = 0
+            if new_index >= len(self.sprite_list):
+                new_index = len(self.sprite_list) - 1
+                new_depth = self.sprite_list[len(self.sprite_list) - 1].depth + 1
+            elif new_index < 0:
+                new_index = 0
+            else:
+                new_depth = self.sprite_list[new_index].depth - 1
+            current.depth = new_depth
+            self.sprite_list.insert(new_index, current)
+
+    def display_all(self, screen):
+        for sprite in self.sprite_list:
+            sprite.update()
+            sprite.display(screen)
+
+    def keys(self):
+        return self.tag_list
+
+
 class SpriteItem:
     globalData = None
 
@@ -42,6 +114,7 @@ class SpriteItem:
     def __init__(self, tag, scene, centre_x, centre_y, width=None, height=None, depth=0):
         self.tag = tag
         self.scene = scene
+        self.depth = depth
         self.x = self.Adjustable(centre_x)
         self.y = self.Adjustable(centre_y)
         self.image = SpriteItem.globalData.images[tag]

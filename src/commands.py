@@ -35,6 +35,7 @@ class Command:
     def do_process(self):
         pass
 
+
 # TODO implement read file (add scene items on demand, like include but triggered)
 
 # TODO implement fade command for transparency
@@ -52,7 +53,6 @@ class Command:
 #
 # **************************************************************************************************
 
-
 class EchoCommand(Command):
 
     def __init__(self):
@@ -62,6 +62,7 @@ class EchoCommand(Command):
 
     def do_process(self):
         print(self.params.get("rest"))
+
 
 # *************************************************************************************************
 #
@@ -85,6 +86,7 @@ class FromCommand(Command):
 
     def do_process(self):
         self.scene.from_folder = self.params.get('rest')
+
 
 # *************************************************************************************************
 #
@@ -189,6 +191,7 @@ class PlayCommand(Command):
                     Command.globalData.sounds[r_tag].play()
         return True
 
+
 # *************************************************************************************************
 #
 #    ##     ##  #######  ##       ##     ## ##     ## ########
@@ -221,6 +224,7 @@ class VolumeCommand(Command):
                 break
         return True
 
+
 # *************************************************************************************************
 #
 #    ########  ##          ###     ######  ########
@@ -252,11 +256,12 @@ class PlaceCommand(Command):
         itag = self.scene.resolve_tag(itag, Command.globalData.images.keys())
         if itag is None:
             return True
-        Command.globalData.sprites[stag] = sprites.SpriteItem(itag, self.scene,
-                                                              self.params.as_float("x", "number for x coord"),
-                                                              self.params.as_float("y", "number for y coord"),
-                                                              self.params.as_float("w"),
-                                                              self.params.as_float("h"))
+        Command.globalData.sprites.sprite_add(sprites.SpriteItem(itag, self.scene,
+                                                          self.params.as_float("x", "number for x coord"),
+                                                          self.params.as_float("y", "number for y coord"),
+                                                          self.params.as_float("w"),
+                                                          self.params.as_float("h"),
+                                                          self.params.as_float("z")))
 
 
 # *************************************************************************************************
@@ -286,7 +291,8 @@ class MoveCommand(Command):
         x = self.params.as_float("x", "new x coord")
         y = self.params.as_float("y", "new y coord")
         rate = timing.Duration(self.params.get("time")).as_seconds()
-        Command.globalData.sprites[tag].move(x, y, rate)
+        Command.globalData.sprites.get_sprite(tag).move(x, y, rate)
+
 
 # *************************************************************************************************
 #
@@ -315,7 +321,8 @@ class ResizeCommand(Command):
         width = self.params.as_float("width", "new width")
         height = self.params.as_float("height", "new height")
         rate = timing.Duration(self.params.get("time")).as_seconds()
-        Command.globalData.sprites[tag].resize(width, height, rate)
+        Command.globalData.sprites.get_sprite(tag).resize(width, height, rate)
+
 
 # *************************************************************************************************
 #
@@ -346,7 +353,8 @@ class ScaleCommand(Command):
         if height_scale is None:
             height_scale = width_scale
         rate = timing.Duration(self.params.get("time")).as_seconds()
-        Command.globalData.sprites[tag].scale(width_scale, height_scale, rate)
+        Command.globalData.sprites.get_sprite(tag).scale(width_scale, height_scale, rate)
+
 
 # *************************************************************************************************
 #
@@ -376,9 +384,9 @@ class RotateCommand(Command):
         to_by = self.params.get("to").lower()
         rate = timing.Duration(self.params.get("time")).as_seconds()
         if to_by == "to":
-            Command.globalData.sprites[tag].turn_to(rotation, rate)
+            Command.globalData.sprites.get_sprite(tag).turn_to(rotation, rate)
         else:
-            Command.globalData.sprites[tag].turn_by(rotation, rate)
+            Command.globalData.sprites.get_sprite(tag).turn_by(rotation, rate)
 
 
 # *************************************************************************************************
@@ -449,7 +457,7 @@ class HideCommand(Command):
         for tag in tag_list:
             s_tag = self.scene.resolve_tag(tag, Command.globalData.sprites.keys())
             if s_tag is not None:
-                Command.globalData.sprites[s_tag].visible = False
+                Command.globalData.sprites.get_sprite(s_tag).visible = False
 
 
 class ShowCommand(Command):
@@ -464,7 +472,8 @@ class ShowCommand(Command):
         for tag in tag_list:
             s_tag = self.scene.resolve_tag(tag, Command.globalData.sprites.keys())
             if s_tag is not None:
-                Command.globalData.sprites[s_tag].visible = True
+                Command.globalData.sprites.get_sprite(s_tag).visible = True
+
 
 # *************************************************************************************************
 #
