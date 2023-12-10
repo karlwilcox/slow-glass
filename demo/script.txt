@@ -24,58 +24,7 @@ vehicles -> road traffic
 + others as needed
 */
 
-begin
-    echo starting main scene
-    make testing 11
-    start planefly
-    # echo $testing $testing
-    # echo (43/4) (   $testing * 2 ) ($testing == 11)
 
-each *:*:30
-each *:*:15
-each *:*:45
-    echo boop $SECOND $MOUSEX $MOUSEY
-    echo A random value from 5 to 20 is (int($CHANCE * 15)+5)
-
-when ("$KEY" == "k")
-    echo You pressed $LASTKEY
-
-at 0:39:50
-    echo beep
-
-on key press f
-    echo $LASTKEY pressed
-
-on key q
-    echo $LASTKEY pressed
-    exit
-
-
-on mouse click
-    echo mouse clicked at $MOUSEX $MOUSEY
-
-every 5 seconds
-    if ($PERCENT > 50) echo Doing something random at $SECOND
-
-scene planefly
-==============
-    begin
-        from aerial
-            load plane.png as plane
-        from
-            load sounds/jetpass2.wav as jetsound
-        place plane at 1000,400,0
-    after 2 seconds
-        show plane
-        # play jetsound
-        move plane to 100,800 in a quarter of a minute
-        scale plane by 50,50 in the same time
-        rotate plane to -90 in same
-        set fade plane to 50 in same
-end scene
-
-
-finish
 
 # Main scene - load & display background
 begin
@@ -102,7 +51,7 @@ scene refuse-truck-rtol
         load refuse-truck-rtol.png as refuse-truck-rtol
         load truckdriveby.wav as truck-noise
         place refuse-truck-rtol as truck at 1100,1190,720
-        move truck to 0,1190 in 12 seconds
+        move truck to 0,1190 in a quarter of a minute
         show truck
 
     after 2 seconds
@@ -132,11 +81,11 @@ scene passenger-train-ltor
     after 15 seconds
         hide loco-ltr
         stop
-endscene
+end scene
 
 # Main Scene activate
 
-after 5 seconds
+every 20 seconds
     # if $PERCENT > 50 then start refuse-truck-rtol
     start refuse-truck-rtol
 

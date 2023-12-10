@@ -66,8 +66,11 @@ class SpriteList:
             self.sprite_list.insert(new_index, current)
 
     def display_all(self, screen):
+        # Update values of all current sprites (visible or not)
+        for adjustable in SpriteItem.Adjustable.instances:
+            adjustable.update_value()
+        # And paint them to the screen
         for sprite in self.sprite_list:
-            sprite.update()
             sprite.display(screen)
 
     def keys(self):
@@ -131,7 +134,7 @@ class SpriteItem:
         self.w = self.Adjustable(w)
         self.h = self.Adjustable(h)
         self.rot = self.Adjustable(0, -360, 360)
-        self.alpha = self.Adjustable(0,0,100)
+        self.alpha = self.Adjustable(0, 0, 100)
         self.visible = False
 
     def move(self, new_x, new_y, seconds):
@@ -174,10 +177,6 @@ class SpriteItem:
                                    self.y.value() - (self.h.value() / 2),
                                    self.w.value(), self.h.value())
             screen.blit(scaled_image, position)
-
-    def update(self):  # Must be called not more than once per FRAMERATE
-        for item in self.Adjustable.instances:
-            item.update_value()
 
     def dump(self):
         return "%s at %f,%f,%d" % (self.tag,

@@ -6,7 +6,7 @@ import pygame, sys
 from pygame.locals import *
 from datetime import datetime
 # local modules
-import script, globals, sprites
+import script, globals, sprites, timing
 import commands, args, triggers
 from defaults import *
 
@@ -55,7 +55,6 @@ def main():
     globalData.scenes[TOP_LEVEL].start()
     pygame.init()
     pygame.mixer.init()
-    fps_clock = pygame.time.Clock()
     if globalData.options["rotate"]:
         screen = pygame.display.set_mode((globalData.options["height"],
                                           globalData.options["width"]))
@@ -65,6 +64,8 @@ def main():
     grey = pygame.Color(127, 127, 127)
     # Main loop
     last_second = 0
+    then = 0
+    tick_rate = 1000 / FRAMERATE
     while True:
         screen.fill(grey)
         handle_events(globalData)
@@ -72,9 +73,11 @@ def main():
         if this_second != last_second:
             last_second = this_second
             do_actions(globalData)
-        globalData.sprites.display_all(screen)
-        pygame.display.update()
-        fps_clock.tick(FRAMERATE)
+        now = timing.Timer.millis()
+        if now - then >= tick_rate:
+            globalData.sprites.display_all(screen)
+            pygame.display.update()
+            then = now
 
 
 # Processing starts here
