@@ -23,6 +23,7 @@ class Dispatcher:
                 break
         if complete is None:
             print("Unknown command: %s" % content)
+            return True
         return complete
 
     def print_help(self):

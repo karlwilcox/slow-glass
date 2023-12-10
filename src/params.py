@@ -56,7 +56,6 @@ class ParamList:
                 # only look for this if previous CANMATCH was found
                 self.params[name] = None
                 continue
-
             if optionality == ParamList.CHOICE:
                 choices = name.split(ParamList.CHOICE)
                 name = choices[0]
@@ -84,13 +83,17 @@ class ParamList:
                     else:
                         step = 0
                 elif optionality == ParamList.CHOICE:
+                    choice_found = False
                     for choice in choices:
                         if arg == choice:
                             self.params[name] = choice
-                            match_found = True
+                            choice_found = True
                             break
-                    if not match_found and state == ParamList.COMMANDS:
-                        return  # Not an error, this command wasn't found
+                    if not choice_found:
+                        if state == ParamList.COMMANDS:
+                            return  # Not an error, this command wasn't found
+                        else:
+                            print("Expected one of: %s" % ", ".join(choices))
                 elif optionality == ParamList.NUMBER:
                     # Always create param, but only match if value is float
                     try:

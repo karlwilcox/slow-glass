@@ -131,6 +131,7 @@ class SpriteItem:
         self.w = self.Adjustable(w)
         self.h = self.Adjustable(h)
         self.rot = self.Adjustable(0, -360, 360)
+        self.alpha = self.Adjustable(0,0,100)
         self.visible = False
 
     def move(self, new_x, new_y, seconds):
@@ -151,12 +152,18 @@ class SpriteItem:
     def turn_by(self, angle, seconds):
         self.rot.set_target_value(self.rot.value() + angle, seconds)
 
+    def trans(self, value, seconds):
+        self.alpha.set_target_value(value, seconds)
+
     def display(self, screen):
         if not self.visible:
             return
         scaled_image = pygame.transform.scale(self.image.surface, (self.w.value(), self.h.value()))
         if self.rot.value() != 0:
             scaled_image = pygame.transform.rotate(scaled_image, self.rot.value() * -1)
+        if self.alpha.value() > 0:
+            # convert transparency 0->100 to alpha 255->0
+            scaled_image.set_alpha(int(255 - (255 * self.alpha.value() / 100)))
         if self.globalData.options["rotate"]:
             position = pygame.Rect(screen.get_width() - (self.y.value() - (self.h.value() / 2)),
                                    self.x.value() - (self.w.value() / 2),

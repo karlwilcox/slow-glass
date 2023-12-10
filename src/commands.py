@@ -434,7 +434,7 @@ class RaiseLowerCommand(Command):
     def __init__(self):
         super().__init__()
         self.help = "raise tag by/to depth (sets depth of sprite)"
-        self.format = "~/set |/raise|lower|depth ~/of : +/tag ~/depth |/by/to +/num"
+        self.format = "~/set |/raise|lower|depth ~/of : +/tag ~/depth |/by|to +/num"
 
     def do_process(self):
         tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
@@ -447,6 +447,31 @@ class RaiseLowerCommand(Command):
             else:
                 Command.globalData.sprites.sprite_set_depth(tag, depth)
 
+# *************************************************************************************************
+#
+#    ########    ###    ########  ########
+#    ##         ## ##   ##     ## ##
+#    ##        ##   ##  ##     ## ##
+#    ######   ##     ## ##     ## ######
+#    ##       ######### ##     ## ##
+#    ##       ##     ## ##     ## ##
+#    ##       ##     ## ########  ########
+#
+# **************************************************************************************************
+
+
+class FadeCommand(Command):
+
+    def __init__(self):
+        super().__init__()
+        self.help = "fade tag to num (Set transparency of sprite from 0 to 100)"
+        self.format = "~/set |/fade|transparency ~/of +/tag ~/to +/value ~/in */time"
+
+    def do_process(self):
+        tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
+        rate = timing.Duration(self.params.get("time")).as_seconds()
+        if tag is not None:
+            Command.globalData.sprites.get_sprite(tag).trans(self.params.as_int("value"), rate)
 
 # *************************************************************************************************
 #

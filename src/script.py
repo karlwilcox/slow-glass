@@ -33,9 +33,6 @@ def read(data, filename=None, folder=None):
             while line := file.readline():
                 line_count += 1
                 line = line.strip()
-                # Any line without alphabetic characters can be ignored
-                if not re.match('[a-zA-Z]+', line):
-                    continue
                 # Ignore comment lines
                 if len(line) < 2 or line.startswith('#'):
                     continue
@@ -46,6 +43,9 @@ def read(data, filename=None, folder=None):
                     in_comment = True
                     continue
                 if in_comment:
+                    continue
+                # Any line without alphabetic characters can be ignored
+                if not re.match('[a-zA-Z]+', line):
                     continue
                 # Actual processing starts here
                 words = re.split(WORD_SPLIT, line.lower())

@@ -65,12 +65,13 @@ scene planefly
         from
             load sounds/jetpass2.wav as jetsound
         place plane at 1000,400,0
-    after 5 seconds
+    after 2 seconds
         show plane
-        play jetsound
+        # play jetsound
         move plane to 100,800 in a quarter of a minute
         scale plane by 50,50 in the same time
         rotate plane to -90 in same
+        set fade plane to 50 in same
 end scene
 
 
