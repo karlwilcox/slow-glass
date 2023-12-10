@@ -40,6 +40,8 @@ class Command:
 
 # TODO implement fade command for transparency
 
+# TODO implement tint command for colour https://stackoverflow.com/questions/49014660/tinting-an-image-in-pygame
+
 # TODO how to change center of rotation? (Not urgent)
 # *************************************************************************************************
 #
@@ -236,7 +238,6 @@ class VolumeCommand(Command):
 #    ##        ######## ##     ##  ######  ########
 #
 # **************************************************************************************************
-# TODO implement remove/delete as opposite of place (deletes sprite from active list)
 
 
 class PlaceCommand(Command):
@@ -247,7 +248,6 @@ class PlaceCommand(Command):
         self.format = "|/place|put : +/itag ~/as &/stag ~/at +/x +/y ~/depth +/z ~/size ?/w ?/h"
 
     def do_process(self):
-        # TODO Implement sprite depth and the raise/lower commands
         itag = self.params.get("itag")
         stag = self.params.get("stag")
         if stag is None:
@@ -256,12 +256,39 @@ class PlaceCommand(Command):
         itag = self.scene.resolve_tag(itag, Command.globalData.images.keys())
         if itag is None:
             return True
-        Command.globalData.sprites.sprite_add(sprites.SpriteItem(itag, self.scene,
-                                                          self.params.as_float("x", "number for x coord"),
-                                                          self.params.as_float("y", "number for y coord"),
-                                                          self.params.as_float("w"),
-                                                          self.params.as_float("h"),
-                                                          self.params.as_float("z")))
+        Command.globalData.sprites.sprite_add(sprites.SpriteItem(itag, stag, self.scene,
+                                                                 self.params.as_float("x", "number for x coord"),
+                                                                 self.params.as_float("y", "number for y coord"),
+                                                                 self.params.as_float("w"),
+                                                                 self.params.as_float("h"),
+                                                                 self.params.as_float("z")))
+
+
+# *************************************************************************************************
+#
+#    ########  ######## ##     ##  #######  ##     ## ########
+#    ##     ## ##       ###   ### ##     ## ##     ## ##
+#    ##     ## ##       #### #### ##     ## ##     ## ##
+#    ########  ######   ## ### ## ##     ## ##     ## ######
+#    ##   ##   ##       ##     ## ##     ##  ##   ##  ##
+#    ##    ##  ##       ##     ## ##     ##   ## ##   ##
+#    ##     ## ######## ##     ##  #######     ###    ########
+#
+# **************************************************************************************************
+
+
+class RemoveCommand(Command):
+
+    def __init__(self):
+        super().__init__()
+        self.help = "remove tag... (remove sprites from the active list, does not delete loaded image)"
+        self.format = "|/remove|erase : >/tags"
+
+    def do_process(self):
+        for tag in self.params.get("tag"):
+            tag = self.scene.resolve_tag(tag, Command.globalData.sprites.keys())
+            if tag is not None:
+                Command.globalData.sprites.remove(tag)
 
 
 # *************************************************************************************************
@@ -387,6 +414,38 @@ class RotateCommand(Command):
             Command.globalData.sprites.get_sprite(tag).turn_to(rotation, rate)
         else:
             Command.globalData.sprites.get_sprite(tag).turn_by(rotation, rate)
+
+
+# *************************************************************************************************
+#
+#    ########     ###    ####  ######  ########       ## ##        #######  ##      ## ######## ########
+#    ##     ##   ## ##    ##  ##    ## ##            ##  ##       ##     ## ##  ##  ## ##       ##     ##
+#    ##     ##  ##   ##   ##  ##       ##           ##   ##       ##     ## ##  ##  ## ##       ##     ##
+#    ########  ##     ##  ##   ######  ######      ##    ##       ##     ## ##  ##  ## ######   ########
+#    ##   ##   #########  ##        ## ##         ##     ##       ##     ## ##  ##  ## ##       ##   ##
+#    ##    ##  ##     ##  ##  ##    ## ##        ##      ##       ##     ## ##  ##  ## ##       ##    ##
+#    ##     ## ##     ## ####  ######  ######## ##       ########  #######   ###  ###  ######## ##     ##
+#
+# **************************************************************************************************
+
+
+class RaiseLowerCommand(Command):
+
+    def __init__(self):
+        super().__init__()
+        self.help = "raise tag by/to depth (sets depth of sprite)"
+        self.format = "~/set |/raise|lower|depth ~/of : +/tag ~/depth |/by/to +/num"
+
+    def do_process(self):
+        tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
+        if tag is not None:
+            depth = self.params.as_int("num")
+            if self.params.get("by") == "by":
+                if "lower" in self.params.command:
+                    depth *= -1
+                Command.globalData.sprites.sprite_change_depth(tag, depth)
+            else:
+                Command.globalData.sprites.sprite_set_depth(tag, depth)
 
 
 # *************************************************************************************************

@@ -24,6 +24,7 @@ class ParamList:
 
     def __init__(self, words, format_spec):
         self.params = {}
+        self.command = []
         self.valid = False
         if len(words) < 1:
             return
@@ -62,6 +63,8 @@ class ParamList:
             step = 1
             if arg_pos < len(words):  # argument is present
                 arg = words[arg_pos]
+                if state == ParamList.COMMANDS:
+                    self.command.append(arg)
                 if optionality == ParamList.OPTIONAL or \
                         optionality == ParamList.REQUIRED or \
                         optionality == ParamList.IFMATCHED:

@@ -27,7 +27,7 @@ class SpriteList:
         # Maintain an ordered list of sprites, order by sprite.depth
         sprite_pos = 0
         while sprite_pos < len(self.sprite_list):
-            if in_sprite.depth < self.sprite_list[sprite_pos].depth:
+            if in_sprite.depth > self.sprite_list[sprite_pos].depth:
                 break
             sprite_pos += 1
         self.sprite_list.insert(sprite_pos, in_sprite)
@@ -73,6 +73,14 @@ class SpriteList:
     def keys(self):
         return self.tag_list
 
+    def dump(self):
+        result = ""
+        count = 0
+        for sprite in self.sprite_list:
+            result = "%d - %s\n" % (count, sprite.dump())
+            count += 1
+        return result
+
 
 class SpriteItem:
     globalData = None
@@ -111,13 +119,13 @@ class SpriteItem:
 
     # End inner class
 
-    def __init__(self, tag, scene, centre_x, centre_y, width=None, height=None, depth=0):
-        self.tag = tag
+    def __init__(self, itag, stag, scene, centre_x, centre_y, width=None, height=None, depth=0):
+        self.tag = stag
         self.scene = scene
         self.depth = depth
         self.x = self.Adjustable(centre_x)
         self.y = self.Adjustable(centre_y)
-        self.image = SpriteItem.globalData.images[tag]
+        self.image = SpriteItem.globalData.images[itag]
         w = width if width is not None else self.image.surface.get_width()
         h = height if height is not None else self.image.surface.get_height()
         self.w = self.Adjustable(w)
@@ -163,3 +171,9 @@ class SpriteItem:
     def update(self):  # Must be called not more than once per FRAMERATE
         for item in self.Adjustable.instances:
             item.update_value()
+
+    def dump(self):
+        return "%s at %f,%f,%d" % (self.tag,
+                                   self.x.value(),
+                                   self.y.value(),
+                                   self.depth)
