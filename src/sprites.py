@@ -67,10 +67,11 @@ class SpriteList:
 
     def display_all(self, screen):
         # Update values of all current sprites (visible or not)
-        for adjustable in SpriteItem.Adjustable.instances:
-            adjustable.update_value()
+        # for adjustable in SpriteItem.Adjustable.instances:
+        #     adjustable.update_value()
         # And paint them to the screen
         for sprite in self.sprite_list:
+            sprite.update()
             sprite.display(screen)
 
     def keys(self):
@@ -89,7 +90,6 @@ class SpriteItem:
     globalData = None
 
     class Adjustable:
-        instances = []
 
         def __init__(self, in_value, min_value=float('-inf'), max_value=float('inf')):
             self.current_value = in_value
@@ -112,7 +112,6 @@ class SpriteItem:
                 self.delta_value = 0
             else:
                 self.delta_value = (target_value - self.current_value) / (seconds * FRAMERATE)
-            self.instances.append(self)
 
         def update_value(self):
             if abs(self.current_value - self.target_value) > abs(self.delta_value):
@@ -135,7 +134,8 @@ class SpriteItem:
         self.h = self.Adjustable(h)
         self.rot = self.Adjustable(0, -360, 360)
         self.alpha = self.Adjustable(0, 0, 100)
-        self.visible = False
+        self.visible = True
+        self.paused = False
 
     def move(self, new_x, new_y, seconds):
         self.x.set_target_value(new_x, seconds)
@@ -158,6 +158,11 @@ class SpriteItem:
     def trans(self, value, seconds):
         self.alpha.set_target_value(value, seconds)
 
+    def update(self):
+        for name, value in vars(self).items():
+            if value.__class__.__name__ == "Adjustable":
+                value.update_value()
+
     def display(self, screen):
         if not self.visible:
             return
@@ -167,16 +172,10 @@ class SpriteItem:
         if self.alpha.value() > 0:
             # convert transparency 0->100 to alpha 255->0
             scaled_image.set_alpha(int(255 - (255 * self.alpha.value() / 100)))
-        if self.globalData.options["rotate"]:
-            position = pygame.Rect(screen.get_width() - (self.y.value() - (self.h.value() / 2)),
-                                   self.x.value() - (self.w.value() / 2),
-                                   self.h.value(), self.w.value())
-            screen.blit(pygame.transform.rotate(scaled_image, -90), position)
-        else:
-            position = pygame.Rect(self.x.value() - (self.w.value() / 2),
-                                   self.y.value() - (self.h.value() / 2),
-                                   self.w.value(), self.h.value())
-            screen.blit(scaled_image, position)
+        position = pygame.Rect(self.x.value() - (self.w.value() / 2),
+                               self.y.value() - (self.h.value() / 2),
+                               self.w.value(), self.h.value())
+        screen.blit(scaled_image, position)
 
     def dump(self):
         return "%s at %f,%f,%d" % (self.tag,

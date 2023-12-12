@@ -5,6 +5,8 @@ import pygame
 
 from defaults import *
 import random
+
+
 # from lib.simpleeval import simple_eval
 
 
@@ -25,12 +27,8 @@ class Variables:
         self.vars[name] = value
 
     def get_var(self, name, scene):
-        if self.data.options["rotate"]:
-            width = self.data.options["height"]
-            height = self.data.options["width"]
-        else:
-            height = self.data.options["height"]
-            width = self.data.options["width"]
+        height = self.data.options["height"]
+        width = self.data.options["width"]
         value = "???"
         now = datetime.now()
         # Built-ins first
@@ -50,9 +48,9 @@ class Variables:
         elif name == "FRAMERATE":
             value = FRAMERATE
         elif name == "WIDTH":
-            value = self.data.options["width"]
+            value = width
         elif name == "HEIGHT":
-            value = self.data.options["height"]
+            value = height
         elif name in ["CENTERX", "CENTREX"]:
             value = width / 2
         elif name in ["CENTERY", "CENTREY"]:
@@ -62,9 +60,9 @@ class Variables:
         elif name == "CHANCE":
             value = random.random()
         elif name == "RANDOMX":
-            value = random.randrange(0, width -1)
+            value = random.randrange(0, width - 1)
         elif name == "RANDOMY":
-            value = random.randrange(0, height -1)
+            value = random.randrange(0, height - 1)
         # None of the above, look for a user variable
         else:
             if name[0] == ":":
@@ -79,7 +77,7 @@ class Variables:
         string_value = f"{value}"
         return string_value
 
-    def purge(self,scene):
+    def purge(self, scene):
         for var_name in self.vars.keys():
             if var_name.startswith(scene + ":"):
                 del self.vars[var_name]
@@ -185,5 +183,3 @@ class Variables:
                 print("%s => %s" % (var_name, self.vars[var_name]))
             elif var_name.startswith(scene + ":"):  # only this scene
                 print("%s => %s" % (var_name, self.vars[var_name]))
-
-

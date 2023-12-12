@@ -61,13 +61,14 @@ def main():
     else:
         screen = pygame.display.set_mode((globalData.options["width"],
                                           globalData.options["height"]))
+    window = pygame.Surface((globalData.options["width"], globalData.options["height"]))
     grey = pygame.Color(127, 127, 127)
     # Main loop
     last_second = 0
     then = 0
     tick_rate = 1000 / FRAMERATE
     while True:
-        screen.fill(grey)
+        window.fill(grey)
         handle_events(globalData)
         this_second = datetime.now().second
         if this_second != last_second:
@@ -75,7 +76,11 @@ def main():
             do_actions(globalData)
         now = timing.Timer.millis()
         if now - then >= tick_rate:
-            globalData.sprites.display_all(screen)
+            globalData.sprites.display_all(window)
+            if globalData.options["rotate"]:
+                screen.blit(pygame.transform.rotate(window, -90), (0, 0))
+            else:
+                screen.blit(window, (0, 0))
             pygame.display.update()
             then = now
 
