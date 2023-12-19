@@ -77,6 +77,7 @@ def print_docs(module):
 
 def print_help(data):
     print_docs(triggers)
+    print_docs(commands)
 
 
 def main():

@@ -16,7 +16,6 @@ class Command:
         self.scene = None
         self.keywords = []
         self.params = None
-        self.help = "(No help provided)"
 
     def invoked(self, words):
         words = re.split(WORD_SPLIT, words)
@@ -49,11 +48,13 @@ class Command:
 # **************************************************************************************************
 
 class EchoCommand(Command):
+    """
+    echo [args...] (prints arguments to console)
+    """
 
     def __init__(self):
         super().__init__()
         self.format = "|/echo|say|print : */rest"
-        self.help = "echo [args...] (prints arguments to console)"
 
     def do_process(self):
         print(self.params.get("rest"))
@@ -73,11 +74,13 @@ class EchoCommand(Command):
 
 
 class FromCommand(Command):
+    """
+        from folder (look for resources in this folder)
+    """
 
     def __init__(self):
         super().__init__()
         self.format = "|/from|using|with : */rest"
-        self.help = "from folder (look for resources in this folder)"
 
     def do_process(self):
         self.scene.from_folder = self.params.get('rest')
@@ -99,10 +102,12 @@ class FromCommand(Command):
 
 
 class LoadCommand(Command):
+    """
+        load filename [as] [tag] (loads resource, basename as tag if not given)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "load filename [as] [tag] (loads resource, basename as tag if not given)"
         self.format = "|/load|upload : +/filename ~/as ?/tag ~/split ?/cols ?/by ?/rows"
 
     def do_process(self):
@@ -137,10 +142,12 @@ class LoadCommand(Command):
 
 
 class UnloadCommand(Command):
+    """
+        unload tag... (unloads resources, deleted from memory)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "unload tag... (unloads resources, deleted from memory)"
         self.format = "|/unload|purge : >/tags"
 
     def do_process(self):
@@ -170,10 +177,12 @@ class UnloadCommand(Command):
 
 
 class PlayCommand(Command):
+    """
+        play tag (play sound named tag to the end)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "play tag (play sound named tag to the end)"
         self.format = "=/play : >/tags"
 
     def do_process(self):
@@ -201,10 +210,12 @@ class PlayCommand(Command):
 
 
 class VolumeCommand(Command):
+    """
+        [set] volume [of] tag [to] 0-100 (per resource sound level)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "[set] volume [of] tag [to] 0-100 (per resource sound level)"
         self.format = "~/set |/volume|vol : ~/of +/tag ~/to +/value"
 
     def do_process(self):
@@ -234,10 +245,12 @@ class VolumeCommand(Command):
 
 
 class PlaceCommand(Command):
+    """
+        place image [as sprite] [at] x,y,z [size w,h] (adds image to display)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "place image [as sprite] [at] x,y,z [size w,h] (adds image to display)"
         self.format = "|/place|put : +/itag ~/as &/stag ~/at +/x +/y ~/depth +/z ~/size ?/w ?/h"
 
     def do_process(self):
@@ -271,10 +284,12 @@ class PlaceCommand(Command):
 
 
 class RemoveCommand(Command):
+    """
+        remove tag... (remove sprites from the display, does not delete loaded image)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "remove tag... (remove sprites from the display, does not delete loaded image)"
         self.format = "|/remove|erase : >/tags"
 
     def do_process(self):
@@ -298,10 +313,12 @@ class RemoveCommand(Command):
 
 
 class MoveCommand(Command):
+    """
+        move tag [to] x,y [in] [time] (moves sprite to new position, whether hidden or visible)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "move tag [to] x,y [in] [time] (moves sprite to new position, whether hidden or visible)"
         self.format = "=/move : +/tag ~/to +/x +/y ~/in */time"
 
     def do_process(self):
@@ -328,10 +345,12 @@ class MoveCommand(Command):
 
 
 class ResizeCommand(Command):
+    """
+        resize tag [to] x,y [in] [time] (moves sprite to new position, whether hidden or visible)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "resize tag [to] x,y [in] [time] (moves sprite to new position, whether hidden or visible)"
         self.format = "|/size|resize : +/tag ~/to +/width +/height ~/in */time"
 
     def do_process(self):
@@ -358,10 +377,12 @@ class ResizeCommand(Command):
 
 
 class ScaleCommand(Command):
+    """
+        scale tag [by] x,y [in] [time] (moves sprite to new position, whether hidden or visible)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "scale tag [by] x,y [in] [time] (moves sprite to new position, whether hidden or visible)"
         self.format = "|/scale|rescale : +/tag ~/by +/xpct #/ypct ~/in */time"
 
     def do_process(self):
@@ -390,10 +411,12 @@ class ScaleCommand(Command):
 
 
 class RotateCommand(Command):
+    """
+        rotate tag [to] degrees [in] [time] (rotates sprite to new position, whether hidden or visible)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "rotate tag [to] degrees [in] [time] (rotates sprite to new position, whether hidden or visible)"
         self.format = "|/rotate|turn : +/tag |/to|by #/degrees ~/in */time"
 
     def do_process(self):
@@ -423,10 +446,12 @@ class RotateCommand(Command):
 
 
 class RaiseLowerCommand(Command):
+    """
+        raise tag by/to depth (sets depth of sprite)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "raise tag by/to depth (sets depth of sprite)"
         self.format = "~/set |/raise|lower|depth ~/of : +/tag ~/depth |/by|to +/num"
 
     def do_process(self):
@@ -485,10 +510,12 @@ class RateCommand(Command):
 
 
 class FadeCommand(Command):
+    """
+        fade tag to num (Set transparency of sprite from 0 to 100)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "fade tag to num (Set transparency of sprite from 0 to 100)"
         self.format = "~/set |/fade|transparency ~/of : +/tag ~/to +/value ~/in */time"
 
     def do_process(self):
@@ -511,10 +538,12 @@ class FadeCommand(Command):
 
 
 class StartCommand(Command):
+    """
+        start scene... (start running a named scene)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "start scene... (start running a named scene)"
         self.format = "|/start|run : >/list"
 
     def do_process(self):
@@ -526,11 +555,13 @@ class StartCommand(Command):
 
 
 class StopCommand(Command):
+    """
+        stop scene... (stop running named scene, or the current scene if not given & removes all sprites
+                    for this scene from display)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "stop scene... (stop running named scene, or the current scene if not given & removes all sprites " \
-                    "for this scene from display)"
         self.format = "|/stop|disable : >/list"
 
     def do_process(self):
@@ -554,10 +585,12 @@ class StopCommand(Command):
 # **************************************************************************************************
 
 class HideCommand(Command):
+    """
+        hide sprites... (hides sprite, but still active and updating)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "hide sprites... (hides sprite, but still active and updating)"
         self.format = "=/hide : >/list"
 
     def do_process(self):
@@ -569,10 +602,12 @@ class HideCommand(Command):
 
 
 class ShowCommand(Command):
+    """
+        show sprites... (reveals sprites in active list)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "show sprites... (reveals sprites in active list) / "
         self.format = "|/show|reveal : >/list"
 
     def do_process(self):
@@ -596,10 +631,12 @@ class ShowCommand(Command):
 
 
 class PauseCommand(Command):
+    """
+        pause sprites... (pause sprite, freeze changes)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "pause sprites... (pause sprite, freeze changes)"
         self.format = "|/pause|resume : >/list"
 
     def do_process(self):
@@ -611,10 +648,12 @@ class PauseCommand(Command):
 
 
 class ResumeCommand(Command):
+    """
+        resume sprites... (resume changing sprites)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "resume sprites... (resume changing sprites) / "
         self.format = "|/resume|unfreeze : >/list"
 
     def do_process(self):
@@ -638,10 +677,12 @@ class ResumeCommand(Command):
 
 
 class MakeCommand(Command):
+    """
+        make name [be] value (can be accessed as $name in other commands)
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "make name [be] value (can be accessed as $name in other commands)"
         self.format = "|/make|let|put : +/name ~/be ~/as */rest"
 
     def do_process(self):
@@ -666,10 +707,12 @@ class MakeCommand(Command):
 
 
 class DumpCommand(Command):
+    """
+        dump vars|scenes|sprites
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "dump vars|scenes|sprites"
         self.format = "=/dump : >/list"
 
     def do_process(self):
@@ -702,10 +745,12 @@ class DumpCommand(Command):
 
 
 class ExitCommand(Command):
+    """
+    exit - ends program
+    """
 
     def __init__(self):
         super().__init__()
-        self.help = "Ends program"
         self.format = "|/exit|quit :"
 
     def do_process(self):
