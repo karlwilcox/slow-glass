@@ -21,8 +21,8 @@ class Scene:
                        "After": "=/after : */rest",
                        "OnKey": "=/on |/key|keypress ~/press : */rest",
                        "OnClick": "=/on ~/mouse =/click : */rest",
-                       "AtTime": "=/at : */rest",
-                       "EachTime": "=/each : */rest",
+                       "AtTime": "=/at ~/time : */rest",
+                       "EachTime": "=/each ~/time: */rest",
                        "Every": "=/every : */rest",
                        "When": "=/when : */rest",
                        }

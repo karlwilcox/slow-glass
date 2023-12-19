@@ -28,6 +28,11 @@ vehicles -> road traffic
 
 # Main scene - load & display background
 begin
+    load runner.png as runner split 5 by 2
+    place runner at 100,700,0
+    set animation rate of runner to 0.5
+    move runner to 1200,700 in 20 seconds
+
     from background
     load background.png as background
     load road-distant.png as road-distant
@@ -44,6 +49,7 @@ begin
     place block-near-r at 935,1021,500
 
     show background block-far-l block-far-r road-distant road-near block-near-r
+
 
 scene refuse-truck-rtol
     begin
@@ -84,7 +90,6 @@ scene passenger-train-ltor
 end scene
 
 # Main Scene activate
-
 every 20 seconds
     # if $PERCENT > 50 then start refuse-truck-rtol
     start refuse-truck-rtol
@@ -92,5 +97,10 @@ every 20 seconds
 after 20 seconds
     start passenger-train-ltor
 
+/*
+every 1 second
+    echo ("frame-%04d.png" % $frame)
+    make frame ($frame + 1)
+*/
 # after 30 seconds
 #    exit

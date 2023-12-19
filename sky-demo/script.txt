@@ -1,0 +1,6 @@
+# Demo of a slowly moving cloud scape
+
+make frame 0
+
+scene cloud-move
+     load

@@ -4,6 +4,11 @@ import timing
 
 
 class Trigger:
+    """
+    Any number of triggers can be associated with any number of commands. Trigger types are
+    described below. The type of trigger which caused the command to be run is available
+    in the variable $TRIGGER
+    """
     key_pressed = False
     keycode = None
     mouse_clicked = False
@@ -47,6 +52,13 @@ class Trigger:
 
 
 class Start(Trigger):
+    """
+    begin
+    All associated commands are run once only when the scene starts (or the program starts, if this
+    trigger is not in a scene.
+    No arguments
+    """
+
     def update(self):
         if not self.expired:
             self.triggered = True
@@ -68,6 +80,13 @@ class Start(Trigger):
 
 
 class OnKey(Trigger):
+    """
+    on key <key>
+    The associated commands are run when the <key> is pressed (strictly speaking, sometime during the
+    second following the key press. Commands are run every time the key is pressed, but never more than
+    once per second. The actual key pressed is available in the variable $LASTKEY
+    Arguments: Any printable key (the space bar cannot be used a key at the moment)
+    """
     trigger_key = None
 
     def __init__(self, words, scene):
@@ -90,6 +109,7 @@ class OnKey(Trigger):
                     # Consume this keypress
                     Trigger.key_pressed = False
 
+
 # *************************************************************************************************
 #
 #       ###    ######## ######## ######## ########
@@ -104,6 +124,11 @@ class OnKey(Trigger):
 
 
 class After(Trigger):
+    """
+    after <duration>
+    Commands are run once, when <duration> seconds have elapsed after the scene has started
+    Arguments: See Duration
+    """
 
     def __init__(self, words, scene):
         super().__init__(words, scene)
@@ -135,6 +160,10 @@ class After(Trigger):
 
 
 class AtTime(Trigger):
+    """
+    at <time-of-day>
+    Commands are run once when time the clock face time matches the time of day given
+    """
 
     def __init__(self, words, scene):
         super().__init__(words, scene)
@@ -166,6 +195,11 @@ class AtTime(Trigger):
 
 
 class EachTime(Trigger):
+    """
+    each <time-of-day-pattern>
+    Commands are run each time the clock face time matches the time of day pattern
+    Arguments: see TimeMatch
+    """
 
     def __init__(self, words, scene):
         super().__init__(words, scene)
@@ -194,6 +228,11 @@ class EachTime(Trigger):
 
 
 class Every(Trigger):
+    """
+    every <duration>
+    Commands are run every <duration> seconds after the scene is started
+    Arguments: See Duration
+    """
 
     def __init__(self, words, scene):
         super().__init__(words, scene)
@@ -206,6 +245,7 @@ class Every(Trigger):
         self.triggered = self.timer.as_seconds() > self.time_value.as_seconds()
         if self.triggered:
             self.timer.reset()
+
 
 # *************************************************************************************************
 #
@@ -221,6 +261,13 @@ class Every(Trigger):
 
 
 class OnClick(Trigger):
+    """
+    onclick
+    Commands are run any mouse button is clicked (might be changed later...). Commands are never
+    run more often than once per second. The coordinates of the mouse at the moment it was clicked
+    are available in the variables $CLICKX and $CLICKY (absolute window coordinates)
+    Arguments: None at present
+    """
     rect = None
 
     def __init__(self, words, scene):
@@ -232,6 +279,7 @@ class OnClick(Trigger):
             self.triggered = True
             # Consume this keypress
             Trigger.mouse_clicked = False
+
 
 # *************************************************************************************************
 #
@@ -247,6 +295,12 @@ class OnClick(Trigger):
 
 
 class When(Trigger):
+    """
+    when (expression)
+    Commands are run when expression evaluates to True. The expression is evaluated once per second
+    Expression is any valid Python code but must be fully enclosed in round brackets (may be restricted later)
+    Slow glass variables will be substituted before the expression is evaluated.
+    """
 
     def __init__(self, words, scene):
         super().__init__(words, scene)
@@ -254,5 +308,4 @@ class When(Trigger):
     def update(self):
         self.expand()
         if self.variables.true_or_false(self.expanded):
-            # print("it was true")
             self.triggered = True

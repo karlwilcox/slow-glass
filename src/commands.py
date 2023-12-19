@@ -36,13 +36,6 @@ class Command:
         pass
 
 
-# TODO implement read file (add scene items on demand, like include but triggered)
-
-# TODO implement fade command for transparency
-
-# TODO implement tint command for colour https://stackoverflow.com/questions/49014660/tinting-an-image-in-pygame
-
-# TODO how to change center of rotation? (Not urgent)
 # *************************************************************************************************
 #
 #    ########  ######  ##     ##  #######
@@ -60,7 +53,7 @@ class EchoCommand(Command):
     def __init__(self):
         super().__init__()
         self.format = "|/echo|say|print : */rest"
-        self.help = "echo [args...]"
+        self.help = "echo [args...] (prints arguments to console)"
 
     def do_process(self):
         print(self.params.get("rest"))
@@ -84,7 +77,7 @@ class FromCommand(Command):
     def __init__(self):
         super().__init__()
         self.format = "|/from|using|with : */rest"
-        self.help = "from folder"
+        self.help = "from folder (look for resources in this folder)"
 
     def do_process(self):
         self.scene.from_folder = self.params.get('rest')
@@ -147,7 +140,7 @@ class UnloadCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.help = "unload tag... (unloads resources)"
+        self.help = "unload tag... (unloads resources, deleted from memory)"
         self.format = "|/unload|purge : >/tags"
 
     def do_process(self):
@@ -180,7 +173,7 @@ class PlayCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.help = "play sound"
+        self.help = "play tag (play sound named tag to the end)"
         self.format = "=/play : >/tags"
 
     def do_process(self):
@@ -211,7 +204,7 @@ class VolumeCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.help = "[set] volume [of] tag [to] 0-100"
+        self.help = "[set] volume [of] tag [to] 0-100 (per resource sound level)"
         self.format = "~/set |/volume|vol : ~/of +/tag ~/to +/value"
 
     def do_process(self):
@@ -244,7 +237,7 @@ class PlaceCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.help = "place image [as sprite] [at] x,y,z [size w,h] (adds to active list but DOES not show sprite)"
+        self.help = "place image [as sprite] [at] x,y,z [size w,h] (adds image to display)"
         self.format = "|/place|put : +/itag ~/as &/stag ~/at +/x +/y ~/depth +/z ~/size ?/w ?/h"
 
     def do_process(self):
@@ -281,7 +274,7 @@ class RemoveCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.help = "remove tag... (remove sprites from the active list, does not delete loaded image)"
+        self.help = "remove tag... (remove sprites from the display, does not delete loaded image)"
         self.format = "|/remove|erase : >/tags"
 
     def do_process(self):
@@ -447,6 +440,37 @@ class RaiseLowerCommand(Command):
             else:
                 Command.globalData.sprites.sprite_set_depth(tag, depth)
 
+
+# *************************************************************************************************
+#
+#    ########     ###    ######## ########
+#    ##     ##   ## ##      ##    ##
+#    ##     ##  ##   ##     ##    ##
+#    ########  ##     ##    ##    ######
+#    ##   ##   #########    ##    ##
+#    ##    ##  ##     ##    ##    ##
+#    ##     ## ##     ##    ##    ########
+#
+# **************************************************************************************************
+
+
+class RateCommand(Command):
+    """
+    set frame rate of tag to value [in duration]
+    Sets the frame update rate to value [in seconds per frame], over the given duration
+    Note that this is independent of the actual display framerate
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.format = "~/set |/frame|animation =/rate ~/of : +/tag ~/to +/value ~/in */time"
+
+    def do_process(self):
+        tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
+        duration = timing.Duration(self.params.get("time")).as_seconds()
+        if tag is not None:
+            Command.globalData.sprites.get_sprite(tag).rate(self.params.as_float("value"), duration)
+
 # *************************************************************************************************
 #
 #    ########    ###    ########  ########
@@ -465,7 +489,7 @@ class FadeCommand(Command):
     def __init__(self):
         super().__init__()
         self.help = "fade tag to num (Set transparency of sprite from 0 to 100)"
-        self.format = "~/set |/fade|transparency ~/of +/tag ~/to +/value ~/in */time"
+        self.format = "~/set |/fade|transparency ~/of : +/tag ~/to +/value ~/in */time"
 
     def do_process(self):
         tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
@@ -506,7 +530,7 @@ class StopCommand(Command):
     def __init__(self):
         super().__init__()
         self.help = "stop scene... (stop running named scene, or the current scene if not given & removes all sprites " \
-                    "from active list)"
+                    "for this scene from display)"
         self.format = "|/stop|disable : >/list"
 
     def do_process(self):
@@ -558,6 +582,47 @@ class ShowCommand(Command):
             if s_tag is not None:
                 Command.globalData.sprites.get_sprite(s_tag).visible = True
 
+# *************************************************************************************************
+#
+#    ########     ###    ##     ##  ######  ########       ## ########  ########  ######  ##     ## ##     ## ########
+#    ##     ##   ## ##   ##     ## ##    ## ##            ##  ##     ## ##       ##    ## ##     ## ###   ### ##
+#    ##     ##  ##   ##  ##     ## ##       ##           ##   ##     ## ##       ##       ##     ## #### #### ##
+#    ########  ##     ## ##     ##  ######  ######      ##    ########  ######    ######  ##     ## ## ### ## ######
+#    ##        ######### ##     ##       ## ##         ##     ##   ##   ##             ## ##     ## ##     ## ##
+#    ##        ##     ## ##     ## ##    ## ##        ##      ##    ##  ##       ##    ## ##     ## ##     ## ##
+#    ##        ##     ##  #######   ######  ######## ##       ##     ## ########  ######   #######  ##     ## ########
+#
+# **************************************************************************************************
+
+
+class PauseCommand(Command):
+
+    def __init__(self):
+        super().__init__()
+        self.help = "pause sprites... (pause sprite, freeze changes)"
+        self.format = "|/pause|resume : >/list"
+
+    def do_process(self):
+        tag_list = self.params.get("list")
+        for tag in tag_list:
+            s_tag = self.scene.resolve_tag(tag, Command.globalData.sprites.keys())
+            if s_tag is not None:
+                Command.globalData.sprites.get_sprite(s_tag).paused = True
+
+
+class ResumeCommand(Command):
+
+    def __init__(self):
+        super().__init__()
+        self.help = "resume sprites... (resume changing sprites) / "
+        self.format = "|/resume|unfreeze : >/list"
+
+    def do_process(self):
+        tag_list = self.params.get("list")
+        for tag in tag_list:
+            s_tag = self.scene.resolve_tag(tag, Command.globalData.sprites.keys())
+            if s_tag is not None:
+                Command.globalData.sprites.get_sprite(s_tag).paused = False
 
 # *************************************************************************************************
 #

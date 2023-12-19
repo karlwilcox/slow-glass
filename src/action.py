@@ -5,6 +5,7 @@ from defaults import *
 
 
 class Action:
+    variables = None
 
     def __init__(self, content_line):
         self.content_line = content_line
@@ -16,6 +17,7 @@ class Action:
 
     def triggered(self):
         for trigger in self.triggers:
+            Action.variables.set_var("TRIGGER", trigger.__class__.__name__)
             if trigger.triggered:
                 return True
         return False

@@ -1,5 +1,6 @@
 import pygame
 from defaults import *
+from timing import Timer
 
 
 class SpriteList:
@@ -128,14 +129,17 @@ class SpriteItem:
         self.x = self.Adjustable(centre_x)
         self.y = self.Adjustable(centre_y)
         self.image = SpriteItem.globalData.images[itag]
-        w = width if width is not None else self.image.surface.get_width()
-        h = height if height is not None else self.image.surface.get_height()
+        self.image_rect = self.image.get_frame_number(0)
+        w = width if width is not None else self.image_rect.width
+        h = height if height is not None else self.image_rect.height
         self.w = self.Adjustable(w)
         self.h = self.Adjustable(h)
         self.rot = self.Adjustable(0, -360, 360)
         self.alpha = self.Adjustable(0, 0, 100)
         self.visible = True
         self.paused = False
+        self.animation_rate = self.Adjustable(0)
+        self.last_frame_millis = Timer.millis()
 
     def move(self, new_x, new_y, seconds):
         self.x.set_target_value(new_x, seconds)
@@ -158,15 +162,26 @@ class SpriteItem:
     def trans(self, value, seconds):
         self.alpha.set_target_value(value, seconds)
 
+    def rate(self, value, seconds):
+        self.animation_rate.set_target_value(value, seconds)
+
     def update(self):
+        if self.paused:
+            return
         for name, value in vars(self).items():
             if value.__class__.__name__ == "Adjustable":
                 value.update_value()
+        if self.animation_rate.value() > 0:
+            if Timer.millis() - self.last_frame_millis > self.animation_rate.value() * 1000:
+                self.last_frame_millis = Timer.millis()
+                self.image_rect = self.image.get_next_frame()
 
     def display(self, screen):
         if not self.visible:
             return
-        scaled_image = pygame.transform.scale(self.image.surface, (self.w.value(), self.h.value()))
+        surface = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)))
+        surface.blit(self.image.surface, (0, 0), self.image_rect)
+        scaled_image = pygame.transform.scale(surface, (self.w.value(), self.h.value()))
         if self.rot.value() != 0:
             scaled_image = pygame.transform.rotate(scaled_image, self.rot.value() * -1)
         if self.alpha.value() > 0:

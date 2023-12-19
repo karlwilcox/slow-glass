@@ -13,7 +13,8 @@ import random
 class Variables:
 
     def __init__(self, data):
-        self.vars = {"KEY": None, "LASTKEY": None, "CLICKX": 0, "CLICKY": 0}
+        # set up some variables that might not be populated until later
+        self.vars = {"KEY": None, "LASTKEY": None, "CLICKX": 0, "CLICKY": 0, "TRIGGER": None}
         self.data = data
 
     def set_var(self, name, value, scene=TOP_LEVEL):

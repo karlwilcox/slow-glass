@@ -1,10 +1,13 @@
 #!/usr/bin/python
 # standard libraries
 import random
+import inspect
 
 import pygame, sys
 from pygame.locals import *
 from datetime import datetime
+
+import action
 # local modules
 import script, globals, sprites, timing
 import commands, args, triggers
@@ -43,19 +46,57 @@ def handle_events(data):
             data.vars.set_var("CLICKY", event.pos[1])
 
 
+def is_relevant(obj):
+    """Filter for the inspector to filter out non user defined functions/classes"""
+    if hasattr(obj, '__name__') and obj.__name__ == 'type':
+        return False
+    if hasattr(obj, '__name__') and obj.__name__ == '__init__':
+        return False
+    if inspect.isfunction(obj) or inspect.isclass(obj) or inspect.ismethod(obj):
+        return True
+
+
+def print_docs(module):
+    flag = True
+
+    for child in inspect.getmembers(module, is_relevant):
+        if not flag:
+            print('\n')
+        flag = False  # To avoid the newlines at top of output
+        doc = inspect.getdoc(child[1])
+        if doc:
+            print(child[0], doc, sep='\n')
+
+        if inspect.isclass(child[1]):
+            for grandchild in inspect.getmembers(child[1], is_relevant):
+                doc = inspect.getdoc(grandchild[1])
+                if doc:
+                    doc = doc.replace('\n', '\n    ')
+                    print('\n    ' + grandchild[0], doc, sep='\n    ')
+
+
+def print_help(data):
+    print_docs(triggers)
+
+
 def main():
     # Initialisation coda
     random.seed()
     globalData = globals.Globals()
     args.parse_args(globalData)
+    if globalData.options["help"]:
+        print_help(globalData)
+        exit(0)
     commands.Command.globalData = globalData
     sprites.SpriteItem.globalData = globalData
     triggers.Trigger.variables = globalData.vars
+    action.Action.variables = globalData.vars
     script.read(globalData)
     globalData.scenes[TOP_LEVEL].start()
     pygame.init()
     pygame.mixer.init()
-    if globalData.options["rotate"]:
+    rotation = str(globalData.options["rotate"]).lower()
+    if rotation.startswith("r") or rotation.startswith("l"):
         screen = pygame.display.set_mode((globalData.options["height"],
                                           globalData.options["width"]))
     else:
@@ -77,8 +118,10 @@ def main():
         now = timing.Timer.millis()
         if now - then >= tick_rate:
             globalData.sprites.display_all(window)
-            if globalData.options["rotate"]:
+            if rotation.startswith("r"):
                 screen.blit(pygame.transform.rotate(window, -90), (0, 0))
+            elif rotation.startswith("l"):
+                screen.blit(pygame.transform.rotate(window, 90), (0, 0))
             else:
                 screen.blit(window, (0, 0))
             pygame.display.update()
