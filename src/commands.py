@@ -47,6 +47,7 @@ class Command:
 #
 # **************************************************************************************************
 
+
 class EchoCommand(Command):
     """
     echo [args...] (prints arguments to console)
@@ -116,7 +117,9 @@ class LoadCommand(Command):
             print("Resource file not found: %s" % filename)
             return True
         tag = self.scene.make_tag(self.params.get("tag"))
-        if filename.lower().endswith((".jpg", ".jpeg", "png", "gif")):
+        if os.path.isdir(filename):
+            Command.globalData.images[tag] = images.ImageFolder(filename)
+        elif filename.lower().endswith((".jpg", ".jpeg", "png", "gif")):
             rows = self.params.as_int("rows")
             cols = self.params.as_int("cols")
             Command.globalData.images[tag] = images.ImageItem(filename, rows, cols)
@@ -637,7 +640,7 @@ class PauseCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "|/pause|resume : >/list"
+        self.format = "|/pause|freeze : >/list"
 
     def do_process(self):
         tag_list = self.params.get("list")

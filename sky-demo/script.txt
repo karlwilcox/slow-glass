@@ -1,6 +1,14 @@
 # Demo of a slowly moving cloud scape
 
-make frame 0
+display height 1080
+display width 1920
+
+begin
+    start cloud-move
 
 scene cloud-move
-     load
+    begin
+        load sky2 as sky2
+        place sky2 at $CENTREX,$CENTREY,999
+        set animation rate of sky2 to 0.1
+end scene

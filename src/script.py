@@ -55,6 +55,7 @@ def read(data, filename=None, folder=None):
                 # Scene management commands
                 command = words[0]
                 argument = None if len(words) < 2 else words[1]
+                value = None if len(words) < 3 else words[2]
                 if command == "scene":
                     if argument is None:
                         print("Expected scene name on line %d" % line_count)
@@ -69,7 +70,7 @@ def read(data, filename=None, folder=None):
                     elif argument == "file":  # same as finish
                         break
                     else:
-                        print ("end must be followed by scene or file")
+                        print("end must be followed by scene or file")
                 elif command == "include":
                     if argument is None:
                         print("Expected filename for include on line %d" % line_count)
@@ -77,6 +78,16 @@ def read(data, filename=None, folder=None):
                         read(argument, data)
                 elif command == "finish":
                     break
+                elif command == "display":
+                    if argument is not None and value is not None:
+                        if argument.startswith("h"):
+                            data.options["height"] = int(value)
+                        elif argument.startswith("w"):
+                            data.options["width"] = int(value)
+                        elif argument.startswith("f"):
+                            data.options["fullscreen"] = True
+                        elif argument.startswith("r"):
+                            data.options["rotate"] = value
                 else:  # must be an action, trigger or condition
                     if current_scene is None:
                         top_level.append(line)

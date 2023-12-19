@@ -1,3 +1,5 @@
+import glob
+
 import pygame
 
 
@@ -52,12 +54,12 @@ class ImageItem:
 class ImageFolder(ImageItem):
 
     def __init__(self, folder_name):
-        self.folder_name = folder_name
-        self.current_image = 0
-        # need to set self.image to the first file, frames to the number of files, w & h to the
-        # size of the first file
-        super().__init__(self.folder_name)
+        self.file_list = sorted(glob.glob(folder_name + "/*.png"))
+        self.current_file = 0
+        super().__init__(self.file_list[0])
 
     def get_next_frame(self):
-        pass
-        # need to update self.image with the next file in order
+        self.current_file += 1
+        if self.current_file >= len(self.file_list):
+            self.current_file = 0
+        self.surface = pygame.image.load(self.file_list[self.current_file])
