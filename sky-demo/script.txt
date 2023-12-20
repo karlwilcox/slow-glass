@@ -11,4 +11,5 @@ scene cloud-move
         load sky2 as sky2
         place sky2 at $CENTREX,$CENTREY,999
         set animation rate of sky2 to 0.1
+        echo $sky2.x $sky2.y
 end scene

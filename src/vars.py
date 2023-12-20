@@ -27,10 +27,15 @@ class Variables:
             name = "%s:%s" % (scene, name)
         self.vars[name] = value
 
-    def get_var(self, name, scene):
+    def get_var(self, in_name, scene):
         height = self.data.options["height"]
         width = self.data.options["width"]
-        value = "???"
+        prop = None
+        if "." in in_name:
+            name, prop = in_name.split(".")
+        else:
+            name = in_name
+        value = None
         now = datetime.now()
         # Built-ins first
         if name == "SECOND":
@@ -64,8 +69,20 @@ class Variables:
             value = random.randrange(0, width - 1)
         elif name == "RANDOMY":
             value = random.randrange(0, height - 1)
+        # OK, let's see if it is a sprite
+        if prop is not None:
+            tag = self.data.scenes[scene].resolve_tag(name, self.data.sprites.keys())
+            if tag is not None:
+                if prop == "x":
+                    value = self.data.sprites.get_sprite(tag).x.value()
+                elif prop == "y":
+                    value = self.data.sprites.get_sprite(tag).y.value()
+                elif prop == "w":
+                    value = self.data.sprites.get_sprite(tag).w.value()
+                elif prop == "h":
+                    value = self.data.sprites.get_sprite(tag).h.value()
         # None of the above, look for a user variable
-        else:
+        if value is None:
             if name[0] == ":":
                 scene = TOP_LEVEL
                 name = name[1:]
@@ -75,6 +92,7 @@ class Variables:
                 value = self.vars[name]
             else:
                 print("Variable not found: %s" % name)
+                value = "???"
         string_value = f"{value}"
         return string_value
 
@@ -109,7 +127,7 @@ class Variables:
                 in_braces = False
                 reading_name = False
                 var_name = ""
-            elif reading_name and not char.isidentifier():
+            elif reading_name and not (char.isalnum() or char in "._"):
                 new_line += self.get_var(var_name, scene)
                 new_line += char
                 reading_name = False
