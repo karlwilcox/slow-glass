@@ -15,7 +15,7 @@ class Globals:
         self.command_dispatcher = dispatcher.Dispatcher()
         self.options = {"width": 1080, "height": 1920, "fullscreen": False,
                         "rotate": False, "dir": DEFAULT_FOLDER, "file": DEFAULT_FILENAME,
-                        "help": False}
+                        "help": False, "safe": SAFE_EVALUATION}
 
     def dump_options(self):
         for key, value in self.options.items():

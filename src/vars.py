@@ -6,16 +6,17 @@ import pygame
 from defaults import *
 import random
 
-
-# from lib.simpleeval import simple_eval
+from lib.simpleeval import simple_eval
 
 
 class Variables:
+    safe = True
 
     def __init__(self, data):
         # set up some variables that might not be populated until later
-        self.vars = {"KEY": None, "LASTKEY": None, "CLICKX": 0, "CLICKY": 0, "TRIGGER": None}
+        self.vars = {"KEY": None, "LASTKEY": None, "CLICKX": 0, "CLICKY": 0, "TRIGGER": None, "HEMISPHERE" : HEMISPHERE}
         self.data = data
+        Variables.safe = SAFE_EVALUATION
 
     def set_var(self, name, value, scene=TOP_LEVEL):
         # check for writable built-ins first
@@ -44,7 +45,29 @@ class Variables:
             value = now.minute
         elif name == "HOUR":
             value = now.hour
-            # TODO add more date variables
+        elif name == "DAY":
+            value = now.day
+        elif name == "DAYNAME":
+            value = now.strftime("%A")
+        elif name == "WEEKDAY":
+            value = now.weekday()
+        elif name == "MONTH":
+            value = now.month
+        elif name == "MONTHNAME":
+            value = now.strftime("%B")
+        elif name == "YEAR":
+            value = now.year
+        elif name == "SEASON":
+            mon = now.month
+            northern = self.vars["hemisphere"].lower().startswith("n")
+            if mon <= 2 or mon >= 12:
+                value = "winter" if northern else "summer"
+            elif mon <= 5:
+                value = "spring" if northern else "autumn"
+            elif mon <= 8:
+                value = "summer" if northern else "winter"
+            else:
+                value = "autumn" if northern else "spring"
         elif name.startswith("MOUSE"):
             x, y = pygame.mouse.get_pos()
             if name.endswith("X"):
@@ -168,8 +191,10 @@ class Variables:
                 expression += char
                 if bracket_count == 0:
                     in_expression = False
-                    # result = simple_eval(expression)
-                    result = eval(expression)
+                    if Variables.safe:
+                        result = simple_eval(expression)
+                    else:
+                        result = eval(expression)
                     new_line += f"{result}"
                     expression = ""
             elif in_expression:

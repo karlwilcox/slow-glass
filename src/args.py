@@ -3,7 +3,8 @@ import sys, getopt
 
 def parse_args(data):
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "fh:w:r:d:", ["fullscreen", "height=", "width=", "rotate=", "dir", "help"])
+        opts, args = getopt.getopt(sys.argv[1:], "fh:w:r:d:", ["fullscreen", "height=", "width=",
+                                                               "rotate=", "dir", "help"])
     except getopt.GetoptError:
         print('main.py [-f --fullscreen] [-r --rotate=l/r] [-h num] [-w num] [--width=num] [--height=num] [-d dir] '
               '--dir=dir')

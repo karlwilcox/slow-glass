@@ -1,3 +1,5 @@
+from io import UnsupportedOperation
+
 import pygame
 from defaults import *
 from timing import Timer
@@ -115,10 +117,13 @@ class SpriteItem:
                 self.delta_value = (target_value - self.current_value) / (seconds * FRAMERATE)
 
         def update_value(self):
-            if abs(self.current_value - self.target_value) > abs(self.delta_value):
-                self.current_value += self.delta_value
-            else:
-                self.delta_value = 0
+            try:
+                if abs(self.current_value - self.target_value) > abs(self.delta_value):
+                    self.current_value += self.delta_value
+                else:
+                    self.delta_value = 0
+            except TypeError as e:
+                print (f"from {self.target_value} to {self.current_value} by {self.delta_value}")
 
     # End inner class
 
@@ -140,6 +145,23 @@ class SpriteItem:
         self.paused = False
         self.animation_rate = self.Adjustable(0)
         self.last_frame_millis = Timer.millis()
+        self.windowed = False
+        # self.ix = self.Adjustable(0, 0, self.image_rect.width)
+        # self.iy = self.Adjustable(0, 0, self.image_rect.height)
+        self.ix = self.Adjustable(0)
+        self.iy = self.Adjustable(0)
+        self.ih = self.Adjustable(0)
+        self.iw = self.Adjustable(0)
+
+    def reposition(self, centre_x, centre_y, width=None, height=None, depth=None):
+        self.x = self.Adjustable(centre_x)
+        self.y = self.Adjustable(centre_y)
+        if width is not None:
+            self.w = self.Adjustable(width)
+        if height is not None:
+            self.h = self.Adjustable(height)
+        if depth is not None:
+            self.depth = depth
 
     def move(self, new_x, new_y, seconds):
         self.x.set_target_value(new_x, seconds)
@@ -165,6 +187,27 @@ class SpriteItem:
     def rate(self, value, seconds):
         self.animation_rate.set_target_value(value, seconds)
 
+    def set_window(self, ix, iy, iw, ih):
+        self.windowed = True
+        self.ix.set_target_value(ix)
+        self.iy.set_target_value(iy)
+        self.iw.set_target_value(iw)
+        self.ih.set_target_value(ih)
+
+    def zoom_to(self, width, height, seconds):
+        if not self.windowed:
+            print("%s is not windowed" % self.tag)
+            return
+        self.iw.set_target_value(width, seconds)
+        self.ih.set_target_value(height, seconds)
+
+    def scroll_to(self, new_ix, new_iy, seconds):
+        if not self.windowed:
+            print("%s is not windowed" % self.tag)
+            return
+        self.ix.set_target_value(new_ix, seconds)
+        self.iy.set_target_value(new_iy, seconds)
+
     def update(self):
         if self.paused:
             return
@@ -179,8 +222,19 @@ class SpriteItem:
     def display(self, screen):
         if not self.visible:
             return
-        surface = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)))
-        surface.blit(self.image.surface, (0, 0), self.image_rect)
+        if self.windowed:
+            target_width = self.iw.value()
+            target_height = self.ih.value()
+            surface = pygame.Surface((int(self.iw.value()), int(self.ih.value())), pygame.SRCALPHA)
+            image_rect = pygame.Rect(self.ix.value() - target_width / 2,
+                                     self.iy.value() - target_height / 2,
+                                     target_width, target_height)
+        else:
+            target_width = self.w.value()
+            target_height = self.h.value()
+            surface = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)), pygame.SRCALPHA)
+            image_rect = self.image_rect
+        surface.blit(self.image.surface, (0, 0), image_rect)
         scaled_image = pygame.transform.scale(surface, (self.w.value(), self.h.value()))
         if self.rot.value() != 0:
             scaled_image = pygame.transform.rotate(scaled_image, self.rot.value() * -1)
@@ -189,7 +243,7 @@ class SpriteItem:
             scaled_image.set_alpha(int(255 - (255 * self.alpha.value() / 100)))
         position = pygame.Rect(self.x.value() - (self.w.value() / 2),
                                self.y.value() - (self.h.value() / 2),
-                               self.w.value(), self.h.value())
+                               target_width, target_height)
         screen.blit(scaled_image, position)
 
     def dump(self):

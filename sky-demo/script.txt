@@ -11,5 +11,11 @@ scene cloud-move
         load sky2 as sky2
         place sky2 at $CENTREX,$CENTREY,999
         set animation rate of sky2 to 0.1
-        echo $sky2.x $sky2.y
+        # echo $sky2.x $sky2.y
+        load loco-ltor.png as loco
+        place loco at $CENTREX,$CENTREY,0 size 360,360
+        window loco at 720,180 360,360
+        # zoom loco to 180,180 in 5 seconds
+        scroll loco to 180,180 in 10 seconds
+        resize loco to 500,500 in 10 seconds
 end scene

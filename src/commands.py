@@ -250,6 +250,7 @@ class VolumeCommand(Command):
 class PlaceCommand(Command):
     """
         place image [as sprite] [at] x,y,z [size w,h] (adds image to display)
+        or redefines existing sprite with the same tag
     """
 
     def __init__(self):
@@ -265,12 +266,118 @@ class PlaceCommand(Command):
         itag = self.scene.resolve_tag(itag, Command.globalData.images.keys())
         if itag is None:
             return True
-        Command.globalData.sprites.sprite_add(sprites.SpriteItem(itag, stag, self.scene,
-                                                                 self.params.as_float("x", "number for x coord"),
-                                                                 self.params.as_float("y", "number for y coord"),
-                                                                 self.params.as_float("w"),
-                                                                 self.params.as_float("h"),
-                                                                 self.params.as_float("z")))
+        x = self.params.as_float("x", "number for x coord")
+        y = self.params.as_float("y", "number for y coord")
+        w = self.params.as_float("w")
+        h = self.params.as_float("h")
+        z = self.params.as_float("z")
+        existing = Command.globalData.sprites.get_sprite(stag)
+        if existing is not None:
+            old_depth = existing.depth
+            existing.reposition(x, y, w, h, z)
+            # depth may have changed, so re-order them
+            if z is not None and z != old_depth:
+                Command.globalData.sprites.sprites_set_depth(stag, existing.depth)
+        else:
+            Command.globalData.sprites.sprite_add(sprites.SpriteItem(itag, stag, self.scene, x, y, w, h, z))
+
+
+# *************************************************************************************************
+#
+#    ##      ## #### ##    ## ########   #######  ##      ##
+#    ##  ##  ##  ##  ###   ## ##     ## ##     ## ##  ##  ##
+#    ##  ##  ##  ##  ####  ## ##     ## ##     ## ##  ##  ##
+#    ##  ##  ##  ##  ## ## ## ##     ## ##     ## ##  ##  ##
+#    ##  ##  ##  ##  ##  #### ##     ## ##     ## ##  ##  ##
+#    ##  ##  ##  ##  ##   ### ##     ## ##     ## ##  ##  ##
+#     ###  ###  #### ##    ## ########   #######   ###  ###
+#
+# **************************************************************************************************
+
+
+class WindowCommand(Command):
+    """
+        window s-tag at ix, iy, iw, ih - define centre, width and height of the sprite on
+        its source image (sprite must exist)
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.format = "=/window : +/stag ~/at +/ix +/iy +/iw +/ih"
+
+    def do_process(self):
+        stag = self.params.get("stag")
+        tag = self.scene.resolve_tag(stag, Command.globalData.sprites.keys())
+        if tag is not None:
+            ix = self.params.as_float("ix", "centre x of window")
+            iy = self.params.as_float("iy", "centre y of window")
+            iw = self.params.as_float("iw", "width of window")
+            ih = self.params.as_float("ih", "height of window")
+            Command.globalData.sprites.get_sprite(tag).set_window(ix, iy, iw, ih)
+        else:
+            print("tag %s not found" % stag)
+
+# *************************************************************************************************
+#
+#    ########  #######   #######  ##     ##
+#         ##  ##     ## ##     ## ###   ###
+#        ##   ##     ## ##     ## #### ####
+#       ##    ##     ## ##     ## ## ### ##
+#      ##     ##     ## ##     ## ##     ##
+#     ##      ##     ## ##     ## ##     ##
+#    ########  #######   #######  ##     ##
+#
+# **************************************************************************************************
+
+
+class ZoomCommand(Command):
+    """
+        zoom tag [to] x,y [in] [time] (changes size of sprite on source window)
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.format = "=/zoom : +/tag ~/to +/iw +/ih ~/in */time"
+
+    def do_process(self):
+        tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
+        if tag is None:
+            return True
+        iw = self.params.as_float("iw", "new width of window")
+        ih = self.params.as_float("ih", "new height of window")
+        rate = timing.Duration(self.params.get("time")).as_seconds()
+        Command.globalData.sprites.get_sprite(tag).zoom_to(iw, ih, rate)
+
+# *************************************************************************************************
+#
+#     ######   ######  ########   #######  ##       ##
+#    ##    ## ##    ## ##     ## ##     ## ##       ##
+#    ##       ##       ##     ## ##     ## ##       ##
+#     ######  ##       ########  ##     ## ##       ##
+#          ## ##       ##   ##   ##     ## ##       ##
+#    ##    ## ##    ## ##    ##  ##     ## ##       ##
+#     ######   ######  ##     ##  #######  ######## ########
+#
+# **************************************************************************************************
+
+
+class ScrollCommand(Command):
+    """
+        scroll tag [to] x,y [in] [time] (changes position of sprite on source window)
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.format = "=/scroll : +/tag ~/to +/ix +/iy ~/in */time"
+
+    def do_process(self):
+        tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
+        if tag is None:
+            return True
+        ix = self.params.as_float("ix", "new centre x of window")
+        iy = self.params.as_float("iy", "new centre y of window")
+        rate = timing.Duration(self.params.get("time")).as_seconds()
+        Command.globalData.sprites.get_sprite(tag).scroll_to(ix, iy, rate)
 
 
 # *************************************************************************************************
