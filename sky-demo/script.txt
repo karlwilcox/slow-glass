@@ -13,9 +13,15 @@ scene cloud-move
         set animation rate of sky2 to 0.1
         # echo $sky2.x $sky2.y
         load loco-ltor.png as loco
-        place loco at $CENTREX,$CENTREY,0 size 360,360
-        window loco at 720,180 360,360
+        place loco at 0,$CENTREY,0
+        # move loco to 1920,0 in 10 seconds
+        move loco to 1920,0 at 100 pps
+        # window loco at 1040,180 360,360
         # zoom loco to 180,180 in 5 seconds
-        scroll loco to 180,180 in 10 seconds
-        resize loco to 500,500 in 10 seconds
+        # scroll loco to -180,180 in 10 seconds
+        # resize loco to 500,500 in 10 seconds
+    after 3 seconds
+        set speed of loco to 40 in 5 seconds
+    every 1 second
+        echo $loco.s
 end scene

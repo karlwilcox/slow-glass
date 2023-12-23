@@ -44,9 +44,12 @@ class ImageItem:
         row = (number // self.rows) + 1
         return self.get_frame_rect(row, column)
 
-    def get_next_frame(self):
-        self.current_frame += 1
+    def get_next_frame(self, advance_by=1):
+        self.current_frame += advance_by
         if self.current_frame >= self.num_frames:
+            # wrap around (jumping ahead if advance_by > 1 and not at end)
+            self.current_frame = self.num_frames - self.num_frames
+        elif self.current_frame < 0:
             self.current_frame = 0
         return self.get_frame_number(self.current_frame)
 

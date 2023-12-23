@@ -96,14 +96,16 @@ class Variables:
         if prop is not None:
             tag = self.data.scenes[scene].resolve_tag(name, self.data.sprites.keys())
             if tag is not None:
-                if prop == "x":
+                if prop.startswith("x"):
                     value = self.data.sprites.get_sprite(tag).x.value()
-                elif prop == "y":
+                elif prop.startswith("y"):
                     value = self.data.sprites.get_sprite(tag).y.value()
-                elif prop == "w":
+                elif prop.startswith("w"):
                     value = self.data.sprites.get_sprite(tag).w.value()
-                elif prop == "h":
+                elif prop.startswith("h"):
                     value = self.data.sprites.get_sprite(tag).h.value()
+                elif prop.startswith("s"):
+                    value = self.data.sprites.get_sprite(tag).get_speed()
         # None of the above, look for a user variable
         if value is None:
             if name[0] == ":":

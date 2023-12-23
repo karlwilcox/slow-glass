@@ -429,7 +429,7 @@ class MoveCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "=/move : +/tag ~/to +/x +/y ~/in */time"
+        self.format = "=/move : +/tag ~/to +/x +/y |/in|at */rest"
 
     def do_process(self):
         tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
@@ -437,8 +437,45 @@ class MoveCommand(Command):
             return True
         x = self.params.as_float("x", "new x coord")
         y = self.params.as_float("y", "new y coord")
+        in_or_at = self.params.get("in")
+        if in_or_at == "in":
+            rate = timing.Duration(self.params.get("rest")).as_seconds()
+            Command.globalData.sprites.get_sprite(tag).move_in_time(x, y, rate)
+        elif in_or_at == "at":
+            rate = timing.Speed(self.params.get("rest")).as_pps()
+            Command.globalData.sprites.get_sprite(tag).move_at_rate(x, y, rate)
+        else:
+            Command.globalData.sprites.get_sprite(tag).move_in_time(x, y, 0)
+
+# *************************************************************************************************
+#
+#     ######  ########  ######## ######## ########
+#    ##    ## ##     ## ##       ##       ##     ##
+#    ##       ##     ## ##       ##       ##     ##
+#     ######  ########  ######   ######   ##     ##
+#          ## ##        ##       ##       ##     ##
+#    ##    ## ##        ##       ##       ##     ##
+#     ######  ##        ######## ######## ########
+#
+# **************************************************************************************************
+
+
+class SpeedCommand(Command):
+    """
+        [set] speed [of] s-tag [to] <value> [in <time>] - change speed of sprite
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.format = "~/set =/speed ~/of : +/tag ~/to +/speed ~/in */time"
+
+    def do_process(self):
+        tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
+        if tag is None:
+            return True
+        speed = self.params.as_float("speed", "new speed (pps)")
         rate = timing.Duration(self.params.get("time")).as_seconds()
-        Command.globalData.sprites.get_sprite(tag).move(x, y, rate)
+        Command.globalData.sprites.get_sprite(tag).set_speed(speed, rate)
 
 
 # *************************************************************************************************
@@ -470,6 +507,7 @@ class ResizeCommand(Command):
         width = self.params.as_float("width", "new width")
         height = self.params.as_float("height", "new height")
         rate = timing.Duration(self.params.get("time")).as_seconds()
+        print("Size of %s to %f in %f" % (tag, width, rate))
         Command.globalData.sprites.get_sprite(tag).resize(width, height, rate)
 
 
@@ -575,6 +613,41 @@ class RaiseLowerCommand(Command):
             else:
                 Command.globalData.sprites.sprite_set_depth(tag, depth)
 
+# *************************************************************************************************
+#
+#       ###    ########  ##     ##    ###    ##    ##  ######  ########
+#      ## ##   ##     ## ##     ##   ## ##   ###   ## ##    ## ##
+#     ##   ##  ##     ## ##     ##  ##   ##  ####  ## ##       ##
+#    ##     ## ##     ## ##     ## ##     ## ## ## ## ##       ######
+#    ######### ##     ##  ##   ##  ######### ##  #### ##       ##
+#    ##     ## ##     ##   ## ##   ##     ## ##   ### ##    ## ##
+#    ##     ## ########     ###    ##     ## ##    ##  ######  ########
+#
+# **************************************************************************************************
+
+
+class AdvanceCommand(Command):
+    """
+        Get next / previous sprite frame
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.format = "|/advance|reverse : +/tag |/by|to +/num ~/frames"
+
+    def do_process(self):
+        tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
+        if tag is not None:
+            frame = self.params.as_int("num")
+            if frame is None or frame == 0:
+                frame = 1
+            if self.params.get("by") == "by":
+                if "reverse" in self.params.command:
+                    frame *= -1
+                Command.globalData.sprites.get_sprite(tag).get_next_frame(frame)
+            else:
+                Command.globalData.sprites.get_sprite(tag).get_frame(frame)
+
 
 # *************************************************************************************************
 #
@@ -604,7 +677,7 @@ class RateCommand(Command):
         tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
         duration = timing.Duration(self.params.get("time")).as_seconds()
         if tag is not None:
-            Command.globalData.sprites.get_sprite(tag).rate(self.params.as_float("value"), duration)
+            Command.globalData.sprites.get_sprite(tag).set_animation_rate(self.params.as_float("value"), duration)
 
 # *************************************************************************************************
 #

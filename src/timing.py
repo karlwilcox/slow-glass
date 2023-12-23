@@ -53,46 +53,79 @@ class Duration:
     def __init__(self, time_string):
         # the small parts are strings, if you want a number use as_float
         self.total = 0
-        words = re.split(WORD_SPLIT, time_string.lower())
-        if "same" in words:
-            self.total = Duration.the_same_time
-            return
-        # look for any number of num / unit pairs
-        number = None
-        for word in words:
-            # words that can before the number
-            if number is None:
-                if word.lower() in ["and", "&"]:
-                    continue
-                if word.isnumeric():
-                    number = float(word)
-                else:
-                    number = wordtypes.NumberFromWord(word).value
+        if len(time_string) > 0:
+            words = re.split(WORD_SPLIT, time_string.lower())
+            if "same" in words:
+                self.total = Duration.the_same_time
+                return
+            # look for any number of num / unit pairs
+            number = None
+            for word in words:
+                # words that can before the number
                 if number is None:
-                    number = 1
-                    continue
-            else:  # got a number, look for a unit
-                # look for a qualifier first
-                fraction = wordtypes.FractionFromWord(word).value
-                if fraction is not None:
-                    number *= fraction
-                    continue
-                # words that can go before the unit
-                if word.lower() in ["a", "an", "of"]:
-                    continue
-                unit = wordtypes.UnitFromWord(word).value
-                if unit is None:
-                    print("Expected a unit: %s" % word)
-                    unit = 1
-                self.total += number * unit
-                number = None
-        # if number isn't None we had one left without a unit
-        if number is not None:
-            self.total += number
-        Duration.the_same_time = self.total
+                    if word.lower() in ["and", "&"]:
+                        continue
+                    if word.isnumeric():
+                        number = float(word)
+                    else:
+                        number = wordtypes.NumberFromWord(word).value
+                    if number is None:
+                        number = 1
+                        continue
+                else:  # got a number, look for a unit
+                    # look for a qualifier first
+                    fraction = wordtypes.FractionFromWord(word).value
+                    if fraction is not None:
+                        number *= fraction
+                        continue
+                    # words that can go before the unit
+                    if word.lower() in ["a", "an", "of"]:
+                        continue
+                    unit = wordtypes.UnitFromWord(word).value
+                    if unit is None:
+                        print("Expected a unit: %s" % word)
+                        unit = 1
+                    self.total += number * unit
+                    number = None
+            # if number isn't None we had one left without a unit
+            if number is not None:
+                self.total += number
+            Duration.the_same_time = self.total
 
     def as_seconds(self):
         return self.total
+
+
+class Speed:
+    the_same_speed = None
+
+    def __init__(self, speed_string):
+        words = re.split(WORD_SPLIT, speed_string.lower())
+        if "same" in words:
+            self.total = Speed.the_same_speed
+            return
+        # look for a number
+        number = None
+        word_count = 0
+        if words[word_count].isnumeric():
+            number = float(words[word_count])
+        else:
+            number = wordtypes.NumberFromWord(words[word_count]).value
+        if number is None:
+            print("Expected a number: %s" % words[word_count])
+            number = 0
+        # Got a number, look for units
+        unit_divisor = 1  # assume pixels per second
+        if ("pps", "secs", "s", "seconds", "second") in words:
+            unit_divisor = 1
+        elif ("ppm", "min", "minutes", "minute", "m") in words:
+            unit_divisor = 60
+        elif ("pph", "hr", "hours", "hour", "h") in words:
+            unit_divisor = 3600
+        self.speed = number / unit_divisor
+
+    def as_pps(self):
+        return self.speed
 
 
 class Timer:

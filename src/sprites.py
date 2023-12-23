@@ -1,3 +1,4 @@
+import math
 from io import UnsupportedOperation
 
 import pygame
@@ -95,14 +96,44 @@ class SpriteItem:
     class Adjustable:
 
         def __init__(self, in_value, min_value=float('-inf'), max_value=float('inf')):
+            # set limits, if given
+            self.lower_limit = min_value
+            self.upper_limit = max_value
+            # data for constant motion
             self.current_value = in_value
             self.target_value = in_value
             self.delta_value = 0.0
-            self.lower_limit = min_value
-            self.upper_limit = max_value
+            # data for acceleration
+            self.time_to_run = 0.0
+            self.time_counter = 0.0
+            self.accel_value = 0.0
+            self.initial_value = 0.0
 
         def value(self):
             return self.current_value
+
+        def get_delta(self):
+            """
+            return rate of change in pixels per second
+            """
+            return self.delta_value * FRAMERATE
+
+        def set_delta(self, delta, rate):
+            """
+            set rate of change in pixels per second
+            accelerating or slowing if rate is non-zero
+            """
+            if rate <= 0:
+                self.delta_value = delta / FRAMERATE
+                return
+            # need to accelerate to the new value in rate seconds
+            self.time_to_run = rate
+            self.time_counter = 0.0
+            self.initial_value = self.get_delta()
+            self.accel_value = (delta - self.get_delta()) / rate
+
+        def get_accel(self):
+            return self.accel_value * FRAMERATE
 
         def set_target_value(self, target_value, seconds=0):
             if target_value is None:
@@ -120,10 +151,17 @@ class SpriteItem:
             try:
                 if abs(self.current_value - self.target_value) > abs(self.delta_value):
                     self.current_value += self.delta_value
+                    # accelerate or slow down to the target value?
+                    if self.time_counter < self.time_to_run:
+                        self.delta_value = (self.initial_value + (self.accel_value * self.time_counter)) / FRAMERATE
+                        self.time_counter += 1 / FRAMERATE
+                    else:
+                        self.time_to_run = 0
                 else:
                     self.delta_value = 0
+                    self.accel_value = 0
             except TypeError as e:
-                print (f"from {self.target_value} to {self.current_value} by {self.delta_value}")
+                print(f"from {self.target_value} to {self.current_value} by {self.delta_value}")
 
     # End inner class
 
@@ -146,8 +184,6 @@ class SpriteItem:
         self.animation_rate = self.Adjustable(0)
         self.last_frame_millis = Timer.millis()
         self.windowed = False
-        # self.ix = self.Adjustable(0, 0, self.image_rect.width)
-        # self.iy = self.Adjustable(0, 0, self.image_rect.height)
         self.ix = self.Adjustable(0)
         self.iy = self.Adjustable(0)
         self.ih = self.Adjustable(0)
@@ -163,7 +199,19 @@ class SpriteItem:
         if depth is not None:
             self.depth = depth
 
-    def move(self, new_x, new_y, seconds):
+    def move_in_time(self, new_x, new_y, seconds):
+        self.x.set_target_value(new_x, seconds)
+        self.y.set_target_value(new_y, seconds)
+
+    def move_at_rate(self, new_x, new_y, rate):
+        """
+        Move to new location at  rate pixels per second
+        """
+        # need the distance to work our the travel time
+        x_distance = new_x - self.x.value()
+        y_distance = new_y - self.y.value()
+        distance = math.sqrt(x_distance ** 2 + y_distance ** 2)
+        seconds = distance / rate
         self.x.set_target_value(new_x, seconds)
         self.y.set_target_value(new_y, seconds)
 
@@ -184,8 +232,24 @@ class SpriteItem:
     def trans(self, value, seconds):
         self.alpha.set_target_value(value, seconds)
 
-    def rate(self, value, seconds):
+    def set_animation_rate(self, value, seconds):
         self.animation_rate.set_target_value(value, seconds)
+
+    def get_speed(self) -> float:
+        x_speed = self.x.get_delta()
+        y_speed = self.y.get_delta()
+        return math.sqrt(x_speed ** 2 + y_speed ** 2)
+
+    def set_speed(self, speed, rate):
+        current_speed: float = self.get_speed()
+        if current_speed <= 0:
+            print("Sprite %s is not moving, set direction first" % self.tag)
+            return
+        scale = speed / current_speed
+        final_x_delta = self.x.get_delta() * scale
+        final_y_delta = self.y.get_delta() * scale
+        self.x.set_delta(final_x_delta, rate)
+        self.y.set_delta(final_y_delta, rate)
 
     def set_window(self, ix, iy, iw, ih):
         self.windowed = True
@@ -207,6 +271,12 @@ class SpriteItem:
             return
         self.ix.set_target_value(new_ix, seconds)
         self.iy.set_target_value(new_iy, seconds)
+
+    def advance(self, num_of_frames):
+        self.image.get_next_frame(num_of_frames)
+
+    def get_frame(self, frame_num):
+        self.image.get_frame_number(frame_num)
 
     def update(self):
         if self.paused:
