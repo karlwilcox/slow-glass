@@ -310,7 +310,9 @@ class SpriteItem:
             scaled_image = pygame.transform.rotate(scaled_image, self.rot.value() * -1)
         if self.alpha.value() > 0:
             # convert transparency 0->100 to alpha 255->0
-            scaled_image.set_alpha(int(255 - (255 * self.alpha.value() / 100)))
+            tmp = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)), pygame.SRCALPHA)
+            tmp.fill((255, 255, 255, int(255 - (255 * self.alpha.value() / 100))))
+            scaled_image.blit(tmp, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
         position = pygame.Rect(self.x.value() - (self.w.value() / 2),
                                self.y.value() - (self.h.value() / 2),
                                target_width, target_height)

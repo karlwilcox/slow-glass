@@ -16,6 +16,7 @@ scene cloud-move
         place loco at 0,$CENTREY,0
         # move loco to 1920,0 in 10 seconds
         move loco to 1920,0 at 100 pps
+        set fade of loco to 50
         # window loco at 1040,180 360,360
         # zoom loco to 180,180 in 5 seconds
         # scroll loco to -180,180 in 10 seconds

@@ -66,9 +66,9 @@ class Scene:
             if current_action.triggered():
                 self.data.command_dispatcher.dispatch(current_action, self)
 
-    def update_triggers(self):
+    def update_triggers(self, millis):
         for trigger in self.trigger_list:
-            trigger.update()
+            trigger.test_update(millis)
 
     def clear_triggers(self):
         for trigger in self.trigger_list:

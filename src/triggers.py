@@ -2,6 +2,18 @@
 
 import timing
 
+# *************************************************************************************************
+#
+#    ######## ########  ####  ######    ######   ######## ########
+#       ##    ##     ##  ##  ##    ##  ##    ##  ##       ##     ##
+#       ##    ##     ##  ##  ##        ##        ##       ##     ##
+#       ##    ########   ##  ##   #### ##   #### ######   ########
+#       ##    ##   ##    ##  ##    ##  ##    ##  ##       ##   ##
+#       ##    ##    ##   ##  ##    ##  ##    ##  ##       ##    ##
+#       ##    ##     ## ####  ######    ######   ######## ##     ##
+#
+# **************************************************************************************************
+
 
 class Trigger:
     """
@@ -15,6 +27,7 @@ class Trigger:
     click_x = 0
     click_y = 0
     variables = None
+    next_update = 0
 
     def __init__(self, content_line, scene_name):
         self.triggered = False
@@ -34,7 +47,11 @@ class Trigger:
     def reset(self):
         pass
 
-    def update(self):
+    def test_update(self, millis):
+        if self.next_update < millis:
+            self.update(millis)
+
+    def update(self, millis):
         pass
 
 
@@ -59,7 +76,7 @@ class Start(Trigger):
     No arguments
     """
 
-    def update(self):
+    def update(self, millis):
         if not self.expired:
             self.triggered = True
             # Only triggers once
@@ -97,7 +114,7 @@ class OnKey(Trigger):
         else:
             self.trigger_key = self.expanded[0]
 
-    def update(self):
+    def update(self, millis):
         if Trigger.key_pressed:
             if self.trigger_key is None:  # trigger on every key press
                 self.triggered = True
@@ -136,7 +153,7 @@ class After(Trigger):
         self.expand()
         self.time_value = timing.Duration(self.expanded)
 
-    def update(self):
+    def update(self, millis):
         if not self.expired:
             self.timer.update()
             # Note the condition, we trigger After the second has elapsed
@@ -171,7 +188,7 @@ class AtTime(Trigger):
         self.expand()
         self.time_value = timing.TimeOfDay(self.expanded)
 
-    def update(self):
+    def update(self, millis):
         if not self.expired:
             self.timer.update()
             self.triggered = self.timer.hour == self.time_value.hour and \
@@ -207,11 +224,14 @@ class EachTime(Trigger):
         self.expand()
         self.time_value = timing.TimeMatch(self.expanded)
 
-    def update(self):
+    def update(self, millis):
         self.timer.update()
         self.triggered = (self.time_value.hour == "*" or self.timer.hour == int(self.time_value.hour)) and \
                          (self.time_value.minute == "*" or self.timer.minute == int(self.time_value.minute)) and \
                          (self.time_value.second == "*" or self.timer.second == int(self.time_value.second))
+        if self.triggered:
+            # Only need to check this once per second
+            self.next_update = millis + 1000
 
 
 # *************************************************************************************************
@@ -240,11 +260,13 @@ class Every(Trigger):
         self.expand()
         self.time_value = timing.Duration(self.expanded)
 
-    def update(self):
+    def update(self, millis):
         self.timer.update()
-        self.triggered = self.timer.as_seconds() > self.time_value.as_seconds()
+        self.triggered = self.timer.millisecond > self.time_value.as_millis()
         if self.triggered:
             self.timer.reset()
+            if self.time_value.as_seconds() >= 1:
+                self.next_update = millis + self.time_value.as_millis()
 
 
 # *************************************************************************************************
@@ -274,7 +296,7 @@ class OnClick(Trigger):
         super().__init__(words, scene)
         self.expand()
 
-    def update(self):
+    def update(self, millis):
         if Trigger.mouse_clicked:
             self.triggered = True
             # Consume this keypress
@@ -305,7 +327,7 @@ class When(Trigger):
     def __init__(self, words, scene):
         super().__init__(words, scene)
 
-    def update(self):
+    def update(self, millis):
         self.expand()
         if self.variables.true_or_false(self.expanded):
             self.triggered = True

@@ -5,7 +5,6 @@ import inspect
 
 import pygame, sys
 from pygame.locals import *
-from datetime import datetime
 
 import action
 # local modules
@@ -14,10 +13,10 @@ import commands, args, triggers
 from defaults import *
 
 
-def do_actions(data):
+def do_actions(data, millis):
     for name, scene in data.scenes.items():
         if scene.enabled:
-            scene.update_triggers()  # update all triggers once this frame
+            scene.update_triggers(millis)  # update all triggers once this frame
             for current_action in scene.action_list:
                 # because one trigger may cause multiple actions
                 if not current_action.complete and current_action.triggered():
@@ -105,28 +104,21 @@ def main():
                                           globalData.options["height"]))
     window = pygame.Surface((globalData.options["width"], globalData.options["height"]))
     grey = pygame.Color(127, 127, 127)
+    clock = pygame.time.Clock()
     # Main loop
-    last_second = 0
-    then = 0
-    tick_rate = 1000 / FRAMERATE
     while True:
         window.fill(grey)
         handle_events(globalData)
-        this_second = datetime.now().second
-        if this_second != last_second:
-            last_second = this_second
-            do_actions(globalData)
-        now = timing.Timer.millis()
-        if now - then >= tick_rate:
-            globalData.sprites.display_all(window)
-            if rotation.startswith("r"):
-                screen.blit(pygame.transform.rotate(window, -90), (0, 0))
-            elif rotation.startswith("l"):
-                screen.blit(pygame.transform.rotate(window, 90), (0, 0))
-            else:
-                screen.blit(window, (0, 0))
-            pygame.display.update()
-            then = now
+        do_actions(globalData, timing.Timer.millis())
+        clock.tick(FRAMERATE)
+        globalData.sprites.display_all(window)
+        if rotation.startswith("r"):
+            screen.blit(pygame.transform.rotate(window, -90), (0, 0))
+        elif rotation.startswith("l"):
+            screen.blit(pygame.transform.rotate(window, 90), (0, 0))
+        else:
+            screen.blit(window, (0, 0))
+        pygame.display.update()
 
 
 # Processing starts here
