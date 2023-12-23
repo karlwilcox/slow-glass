@@ -38,8 +38,9 @@ class Trigger:
 
     # expand trigger conditions when needed (mostly when we set them up)
     def expand(self):
-        temp = self.variables.expand_all(self.content_line, self.scene_name)
-        self.expanded = self.variables.evaluate(temp)
+        can_eval, self.expanded = self.variables.expand_all(self.content_line, self.scene_name)
+        if can_eval:
+            self.expanded = self.variables.evaluate(self.expanded)
 
     def clear(self):
         self.triggered = False

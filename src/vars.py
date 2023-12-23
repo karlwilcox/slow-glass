@@ -115,11 +115,12 @@ class Variables:
                 name = "%s:%s" % (scene, name)
             if name in self.vars.keys():
                 value = self.vars[name]
-            else:
-                print("Variable not found: %s" % name)
-                value = "???"
-        string_value = f"{value}"
-        return string_value
+        if value is None:
+            print("Variable not found: %s" % name)
+            string_value = "???"
+        else:
+            string_value = f"{value}"
+        return value is not None, string_value
 
     def purge(self, scene):
         for var_name in self.vars.keys():
@@ -127,6 +128,7 @@ class Variables:
                 del self.vars[var_name]
 
     def expand_all(self, line, scene):
+        can_eval = True
         if len(line) < 2:
             return line
         var_name = ""
@@ -136,6 +138,7 @@ class Variables:
         in_braces = False
         while pos < len(line):
             char = line[pos]
+            valid = True
             lookahead = None if pos + 1 >= len(line) else line[pos + 1]
             if char == "\\":  # only special before $
                 if lookahead == "$":
@@ -148,12 +151,14 @@ class Variables:
             elif reading_name and char == "{":
                 in_braces = True
             elif in_braces and char == "}":
-                new_line += self.get_var(var_name, scene)
+                valid, value = self.get_var(var_name, scene)
+                new_line += value
                 in_braces = False
                 reading_name = False
                 var_name = ""
             elif reading_name and not (char.isalnum() or char in "._"):
-                new_line += self.get_var(var_name, scene)
+                valid, value = self.get_var(var_name, scene)
+                new_line += value
                 new_line += char
                 reading_name = False
                 var_name = ""
@@ -162,9 +167,14 @@ class Variables:
             else:
                 new_line += char
             pos += 1
+            if not valid:
+                can_eval = False
         if len(var_name) > 0:
-            new_line += self.get_var(var_name, scene)
-        return new_line
+            valid, value = self.get_var(var_name, scene)
+            new_line += value
+            if not valid:
+                can_eval = False
+        return can_eval, new_line
 
     @staticmethod
     def evaluate(line):

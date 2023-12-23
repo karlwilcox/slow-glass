@@ -23,6 +23,7 @@ scene cloud-move
         # resize loco to 500,500 in 10 seconds
     after 3 seconds
         set speed of loco to 40 in 5 seconds
+        echo ($wibble * 4)
     every 1 second
-        echo $loco.s
+        echo $loco.s $wibble
 end scene

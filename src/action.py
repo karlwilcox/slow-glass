@@ -23,13 +23,14 @@ class Action:
         return False
 
     def conditional(self, variables, scene_name):
-        expanded_args = variables.expand_all(self.content_line, scene_name)
+        can_eval, expanded_args = variables.expand_all(self.content_line, scene_name)
         # Expand expressions
-        evaluated_args = variables.evaluate(expanded_args)
-        # Test conditionals
-        conditional_args = variables.conditional(evaluated_args)
-        if conditional_args is not None:
-            self.expanded_line = conditional_args
+        if can_eval:
+            expanded_args = variables.evaluate(expanded_args)
+            # Test conditionals
+            expanded_args = variables.conditional(expanded_args)
+        if expanded_args is not None:
+            self.expanded_line = expanded_args
             # if " " in conditional_args:
             #     self.task, self.args = re.split(WORD_SPLIT, conditional_args, 1)
             # else:
