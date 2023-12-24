@@ -35,7 +35,7 @@ class UnitFromWord(ValueFromWord):
         self.word_list = {"secs": 1, "s": 1, "seconds": 1,
                           "mins": 60, "m": 60, "minutes": 60,
                           "hrs": 3600, "h": 3600, "hours": 3600,
-                          "frame": 1 / FRAMERATE, "frames": 1 / FRAMERATE}
+                          "frames": 1 / FRAMERATE}
         super().__init__(word, True)
 
 

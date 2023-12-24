@@ -96,17 +96,24 @@ class Duration:
                 return
             # look for any number of num / unit pairs
             number = None
-            for word in words:
+            word_count = 0
+            while word_count < len(words):
+                word = words[word_count]
                 # words that can before the number
                 if number is None:
                     if word.lower() in ["and", "&"]:
+                        word_count += 1
                         continue
                     if re.match("[0-9]+\\.?[0-9]*", word.lower()):
                         number = float(word)
+                        word_count += 1
                     else:
                         number = wordtypes.NumberFromWord(word).value
                     if number is None:
                         number = 1
+                        continue
+                    else:
+                        word_count += 1
                         continue
                 else:  # got a number, look for a unit
                     # look for a qualifier first
@@ -122,6 +129,7 @@ class Duration:
                         print("Expected a unit: %s" % word)
                         unit = 1
                     self.total += number * unit
+                    word_count += 1
                     number = None
             # if number isn't None we had one left without a unit
             if number is not None:
