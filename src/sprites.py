@@ -108,6 +108,7 @@ class SpriteItem:
             self.time_counter = 0.0
             self.accel_value = 0.0
             self.initial_value = 0.0
+            self.changed = False
 
         def value(self):
             return self.current_value
@@ -131,6 +132,7 @@ class SpriteItem:
             self.time_counter = 0.0
             self.initial_value = self.get_delta()
             self.accel_value = (delta - self.get_delta()) / rate
+            self.changed = True
 
         def get_accel(self):
             return self.accel_value * FRAMERATE
@@ -146,10 +148,12 @@ class SpriteItem:
                 self.delta_value = 0
             else:
                 self.delta_value = (target_value - self.current_value) / (seconds * FRAMERATE)
+            self.changed = True
 
         def update_value(self):
             try:
                 if abs(self.current_value - self.target_value) > abs(self.delta_value):
+                    self.changed = True
                     self.current_value += self.delta_value
                     # accelerate or slow down to the target value?
                     if self.time_counter < self.time_to_run:
@@ -158,10 +162,14 @@ class SpriteItem:
                     else:
                         self.time_to_run = 0
                 else:
+                    self.current_value = self.target_value
                     self.delta_value = 0
                     self.accel_value = 0
             except TypeError as e:
                 print(f"from {self.target_value} to {self.current_value} by {self.delta_value}")
+            return_value = self.changed
+            self.changed = False
+            return return_value
 
     # End inner class
 
@@ -188,6 +196,8 @@ class SpriteItem:
         self.iy = self.Adjustable(0)
         self.ih = self.Adjustable(0)
         self.iw = self.Adjustable(0)
+        self.updated = True
+        self.previous = None
 
     def reposition(self, centre_x, centre_y, width=None, height=None, depth=None):
         self.x = self.Adjustable(centre_x)
@@ -274,48 +284,57 @@ class SpriteItem:
 
     def advance(self, num_of_frames):
         self.image.get_next_frame(num_of_frames)
+        self.updated = True
 
     def get_frame(self, frame_num):
         self.image.get_frame_number(frame_num)
+        self.updated = True
 
     def update(self):
         if self.paused:
             return
         for name, value in vars(self).items():
             if value.__class__.__name__ == "Adjustable":
-                value.update_value()
+                if value.update_value():
+                    self.updated = True
         if self.animation_rate.value() > 0:
             if Timer.millis() - self.last_frame_millis > self.animation_rate.value() * 1000:
                 self.last_frame_millis = Timer.millis()
                 self.image_rect = self.image.get_next_frame()
+                self.updated = True
 
     def display(self, screen):
         if not self.visible:
             return
-        if self.windowed:
-            target_width = self.iw.value()
-            target_height = self.ih.value()
-            surface = pygame.Surface((int(self.iw.value()), int(self.ih.value())), pygame.SRCALPHA)
-            image_rect = pygame.Rect(self.ix.value() - target_width / 2,
-                                     self.iy.value() - target_height / 2,
-                                     target_width, target_height)
+        if self.updated:
+            if self.windowed:
+                target_width = self.iw.value()
+                target_height = self.ih.value()
+                surface = pygame.Surface((int(self.iw.value()), int(self.ih.value())), pygame.SRCALPHA)
+                image_rect = pygame.Rect(self.ix.value() - target_width / 2,
+                                         self.iy.value() - target_height / 2,
+                                         target_width, target_height)
+            else:
+                target_width = self.w.value()
+                target_height = self.h.value()
+                surface = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)), pygame.SRCALPHA)
+                image_rect = self.image_rect
+            surface.blit(self.image.surface, (0, 0), image_rect)
+            scaled_image = pygame.transform.scale(surface, (self.w.value(), self.h.value()))
+            if self.rot.value() != 0:
+                scaled_image = pygame.transform.rotate(scaled_image, self.rot.value() * -1)
+            if self.alpha.value() > 0:
+                # convert transparency 0->100 to alpha 255->0
+                tmp = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)), pygame.SRCALPHA)
+                tmp.fill((255, 255, 255, int(255 - (255 * self.alpha.value() / 100))))
+                scaled_image.blit(tmp, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            position = pygame.Rect(self.x.value() - (self.w.value() / 2),
+                                   self.y.value() - (self.h.value() / 2),
+                                   target_width, target_height)
+            self.previous = scaled_image, position
+            self.updated = False
         else:
-            target_width = self.w.value()
-            target_height = self.h.value()
-            surface = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)), pygame.SRCALPHA)
-            image_rect = self.image_rect
-        surface.blit(self.image.surface, (0, 0), image_rect)
-        scaled_image = pygame.transform.scale(surface, (self.w.value(), self.h.value()))
-        if self.rot.value() != 0:
-            scaled_image = pygame.transform.rotate(scaled_image, self.rot.value() * -1)
-        if self.alpha.value() > 0:
-            # convert transparency 0->100 to alpha 255->0
-            tmp = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)), pygame.SRCALPHA)
-            tmp.fill((255, 255, 255, int(255 - (255 * self.alpha.value() / 100))))
-            scaled_image.blit(tmp, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-        position = pygame.Rect(self.x.value() - (self.w.value() / 2),
-                               self.y.value() - (self.h.value() / 2),
-                               target_width, target_height)
+            scaled_image, position = self.previous
         screen.blit(scaled_image, position)
 
     def dump(self):

@@ -101,7 +101,7 @@ class Duration:
                 if number is None:
                     if word.lower() in ["and", "&"]:
                         continue
-                    if word.isnumeric():
+                    if re.match("[0-9]+\\.?[0-9]*", word.lower()):
                         number = float(word)
                     else:
                         number = wordtypes.NumberFromWord(word).value
@@ -127,6 +127,7 @@ class Duration:
             if number is not None:
                 self.total += number
             Duration.the_same_time = self.total
+            print("Duration is: %s" % self.total)
 
     def as_seconds(self):
         return self.total
