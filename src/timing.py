@@ -89,53 +89,50 @@ class Duration:
     def __init__(self, time_string):
         # the small parts are strings, if you want a number use as_float
         self.total = 0
-        if len(time_string) > 0:
-            words = re.split(WORD_SPLIT, time_string.lower())
-            if "same" in words:
-                self.total = Duration.the_same_time
-                return
-            # look for any number of num / unit pairs
-            number = None
-            word_count = 0
-            while word_count < len(words):
-                word = words[word_count]
-                # words that can before the number
+        if len(time_string) == 0:
+            return
+        words = re.split(WORD_SPLIT, time_string.lower())
+        if "same" in words:
+            self.total = Duration.the_same_time
+            return
+        # look for any number of num / unit pairs
+        number = None
+        unit = 1
+        word_count = 0
+        while word_count < len(words):
+            word = words[word_count]
+            increment = 1
+            # words that can before the number
+            if number is None:
+                if word.lower() in ["and", "&"]:
+                    pass
+                elif re.match("[0-9]+\\.?[0-9]*", word.lower()):
+                    number = float(word)
+                else:
+                    number = wordtypes.NumberFromWord(word).value
                 if number is None:
-                    if word.lower() in ["and", "&"]:
-                        word_count += 1
-                        continue
-                    if re.match("[0-9]+\\.?[0-9]*", word.lower()):
-                        number = float(word)
-                        word_count += 1
-                    else:
-                        number = wordtypes.NumberFromWord(word).value
-                    if number is None:
-                        number = 1
-                        continue
-                    else:
-                        word_count += 1
-                        continue
-                else:  # got a number, look for a unit
-                    # look for a qualifier first
-                    fraction = wordtypes.FractionFromWord(word).value
-                    if fraction is not None:
-                        number *= fraction
-                        continue
-                    # words that can go before the unit
-                    if word.lower() in ["a", "an", "of"]:
-                        continue
+                    number = 1
+                    increment = 0
+            else:  # got a number, look for a unit
+                # look for a qualifier first
+                fraction = wordtypes.FractionFromWord(word).value
+                if fraction is not None:
+                    number *= fraction
+                # words that can go before the unit
+                elif word.lower() in ["a", "an", "of"]:
+                    pass
+                else:
                     unit = wordtypes.UnitFromWord(word).value
                     if unit is None:
                         print("Expected a unit: %s" % word)
                         unit = 1
-                    self.total += number * unit
-                    word_count += 1
-                    number = None
-            # if number isn't None we had one left without a unit
-            if number is not None:
-                self.total += number
-            Duration.the_same_time = self.total
-            print("Duration is: %s" % self.total)
+                self.total += number * unit
+                number = None
+            word_count += increment
+        # if number isn't None we had one left without a unit
+        if number is not None:
+            self.total += number
+        Duration.the_same_time = self.total
 
     def as_seconds(self):
         return self.total

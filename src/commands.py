@@ -30,6 +30,16 @@ class Command:
         else:
             return result
 
+    def tag_fixup(self, itag, stag):
+        """
+        return properly named image and sprite tags
+        """
+        if stag is None:
+            stag = itag
+        stag = self.scene.make_tag(stag)
+        itag = self.scene.resolve_tag(itag, Command.globalData.images.keys())
+        return itag, stag
+
     @abstractmethod
     def do_process(self):
         pass
@@ -109,14 +119,17 @@ class LoadCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "|/load|upload : +/filename ~/as ?/tag ~/split ?/cols ?/by ?/rows"
+        self.format = "|/load|upload : +/filename ~/name ~/named &/tag ~/split ?/cols ?/by ?/rows"
 
     def do_process(self):
-        filename = os.path.join(self.scene.folder, self.scene.from_folder, self.params.get("filename"))
+        filename = os.path.join(self.scene.folder, self.scene.from_folder, self.params.get("filename")).rstrip("/")
         if not os.path.exists(filename):
             print("Resource file not found: %s" % filename)
             return True
-        tag = self.scene.make_tag(self.params.get("tag"))
+        tag = self.params.get("tag")
+        if tag is None:
+            tag, ext = os.path.splitext(os.path.basename(filename))
+        tag = self.scene.make_tag(tag)
         if os.path.isdir(filename):
             Command.globalData.images[tag] = images.ImageFolder(filename)
         elif filename.lower().endswith((".jpg", ".jpeg", "png", "gif")):
@@ -233,21 +246,20 @@ class VolumeCommand(Command):
                 break
         return True
 
-
 # *************************************************************************************************
 #
-#    ########  ##          ###     ######  ########
-#    ##     ## ##         ## ##   ##    ## ##
-#    ##     ## ##        ##   ##  ##       ##
-#    ########  ##       ##     ## ##       ######
-#    ##        ##       ######### ##       ##
-#    ##        ##       ##     ## ##    ## ##
-#    ##        ######## ##     ##  ######  ########
+#    ########  ##          ###     ######  ########       ###    ########
+#    ##     ## ##         ## ##   ##    ## ##            ## ##      ##
+#    ##     ## ##        ##   ##  ##       ##           ##   ##     ##
+#    ########  ##       ##     ## ##       ######      ##     ##    ##
+#    ##        ##       ######### ##       ##          #########    ##
+#    ##        ##       ##     ## ##    ## ##          ##     ##    ##
+#    ##        ######## ##     ##  ######  ########    ##     ##    ##
 #
 # **************************************************************************************************
 
 
-class PlaceCommand(Command):
+class PlaceAtCommand(Command):
     """
         place image [as sprite] [at] x,y,z [size w,h] (adds image to display)
         or redefines existing sprite with the same tag
@@ -255,15 +267,10 @@ class PlaceCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "|/place|put : +/itag ~/as &/stag ~/at +/x +/y ~/depth +/z ~/size ?/w ?/h"
+        self.format = "=/place : +/itag ~/named &/stag +/at +/x +/y ~/depth +/z ~/size ?/w ?/h"
 
     def do_process(self):
-        itag = self.params.get("itag")
-        stag = self.params.get("stag")
-        if stag is None:
-            stag = itag
-        stag = self.scene.make_tag(stag)
-        itag = self.scene.resolve_tag(itag, Command.globalData.images.keys())
+        itag, stag = self.tag_fixup(self.params.get("itag"), self.params.get("stag"))
         if itag is None:
             return True
         x = self.params.as_float("x", "number for x coord")
@@ -280,6 +287,85 @@ class PlaceCommand(Command):
                 Command.globalData.sprites.sprites_set_depth(stag, existing.depth)
         else:
             Command.globalData.sprites.sprite_add(sprites.SpriteItem(itag, stag, self.scene, x, y, w, h, z))
+
+# *************************************************************************************************
+#
+#    ########  ##          ###     ######  ########       ###     ######
+#    ##     ## ##         ## ##   ##    ## ##            ## ##   ##    ##
+#    ##     ## ##        ##   ##  ##       ##           ##   ##  ##
+#    ########  ##       ##     ## ##       ######      ##     ##  ######
+#    ##        ##       ######### ##       ##          #########       ##
+#    ##        ##       ##     ## ##    ## ##          ##     ## ##    ##
+#    ##        ######## ##     ##  ######  ########    ##     ##  ######
+#
+# **************************************************************************************************
+
+
+class PlaceAsCommand(Command):
+    """
+        place image [as sprite] as location
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.format = "=/put : +/itag ~/named &/stag +/as |/background|top|bottom|left|right|ground|sky */rest"
+
+    def do_process(self):
+        stag = self.params.get("stag")
+        location = self.params.get("background")
+        if stag is None:
+            stag = location
+        itag, stag = self.tag_fixup(self.params.get("itag"), stag)
+        print("%s %s" % (itag, stag))
+        if itag is None:
+            return True
+        width = Command.globalData.options["width"]
+        height = Command.globalData.options["height"]
+        image_width = Command.globalData.images[itag].frame_width
+        image_height = Command.globalData.images[itag].frame_height
+        image_ar = image_width / image_height
+        if location == "background":
+            x = width / 2
+            y = height / 2
+            w = width
+            h = height
+            z = 1000
+        elif location == "bottom" or location == "ground":
+            x = width / 2
+            w = width
+            # Set height to maintain original aspect ratio
+            h = image_height * (width / image_width)
+            # and move to the bottom
+            y = height - (h / 2)
+            z = 980
+        elif location == "top" or location == "sky":
+            x = width / 2
+            w = width
+            # Set height to maintain original aspect ratio
+            h = image_height * (width / image_width)
+            # and move to the top
+            y = h / 2
+            z = 980
+        elif location == "left":
+            y = height / 2
+            h = height
+            # Set width to maintain original aspect ratio
+            w = image_width * (height / image_height)
+            # and move to the left
+            x = w /2
+            z = 960
+        elif location == "left":
+            y = height / 2
+            h = height
+            # Set width to maintain original aspect ratio
+            w = image_width * (height / image_height)
+            # and move to the right
+            x = width - (w /2)
+            z = 960
+        else:
+            print("Unknown location: " + self.params.get("rest"))
+            return
+        Command.globalData.sprites.sprite_add(sprites.SpriteItem(itag, stag, self.scene, x, y, w, h, z))
 
 
 # *************************************************************************************************

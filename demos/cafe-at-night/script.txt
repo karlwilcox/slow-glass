@@ -1,0 +1,32 @@
+# Cafe at night, slightly animated (after Van Gogh)
+
+# Directives
+display height 1920
+display width 1080
+
+begin
+    # Constants
+    make lampx 367
+    make lampy 1014
+
+    # Load all our resources
+    load background.png
+    load star1.png
+    load star2.png
+    load star3.png
+    load lamp.png
+    # Place them
+    put background as background
+    place star1 at 747,376,10
+    place star2 at 881,60,20
+    place star3 at 342,19,30
+    place lamp at $lampx,$lampy,40
+
+every frame
+    if ($PERCENT > 33) set transparency of star1 to (50 * $CHANCE)
+    if ($PERCENT > 33) set transparency of star2 to (50 * $CHANCE)
+    if ($PERCENT > 33) set transparency of star3 to (50 * $CHANCE)
+
+every 0.4 seconds
+    set transparency of lamp to (34 + (15 * $CHANCE))
+    move lamp to ($lampx - 5 + (10 * $CHANCE)) ($lampy - 5 + (10 * $CHANCE))

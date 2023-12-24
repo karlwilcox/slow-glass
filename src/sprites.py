@@ -5,6 +5,18 @@ import pygame
 from defaults import *
 from timing import Timer
 
+# *************************************************************************************************
+#
+#     ######  ########  ########  #### ######## ######## ##       ####  ######  ########
+#    ##    ## ##     ## ##     ##  ##     ##    ##       ##        ##  ##    ##    ##
+#    ##       ##     ## ##     ##  ##     ##    ##       ##        ##  ##          ##
+#     ######  ########  ########   ##     ##    ######   ##        ##   ######     ##
+#          ## ##        ##   ##    ##     ##    ##       ##        ##        ##    ##
+#    ##    ## ##        ##    ##   ##     ##    ##       ##        ##  ##    ##    ##
+#     ######  ##        ##     ## ####    ##    ######## ######## ####  ######     ##
+#
+# **************************************************************************************************
+
 
 class SpriteList:
 
@@ -89,10 +101,33 @@ class SpriteList:
             count += 1
         return result
 
+# *************************************************************************************************
+#
+#     ######  ########  ########  #### ######## ######## #### ######## ######## ##     ##
+#    ##    ## ##     ## ##     ##  ##     ##    ##        ##     ##    ##       ###   ###
+#    ##       ##     ## ##     ##  ##     ##    ##        ##     ##    ##       #### ####
+#     ######  ########  ########   ##     ##    ######    ##     ##    ######   ## ### ##
+#          ## ##        ##   ##    ##     ##    ##        ##     ##    ##       ##     ##
+#    ##    ## ##        ##    ##   ##     ##    ##        ##     ##    ##       ##     ##
+#     ######  ##        ##     ## ####    ##    ######## ####    ##    ######## ##     ##
+#
+# **************************************************************************************************
+
 
 class SpriteItem:
     globalData = None
 
+# *************************************************************************************************
+#
+#       ###    ########        ## ##     ##  ######  ########    ###    ########  ##       ########
+#      ## ##   ##     ##       ## ##     ## ##    ##    ##      ## ##   ##     ## ##       ##
+#     ##   ##  ##     ##       ## ##     ## ##          ##     ##   ##  ##     ## ##       ##
+#    ##     ## ##     ##       ## ##     ##  ######     ##    ##     ## ########  ##       ######
+#    ######### ##     ## ##    ## ##     ##       ##    ##    ######### ##     ## ##       ##
+#    ##     ## ##     ## ##    ## ##     ## ##    ##    ##    ##     ## ##     ## ##       ##
+#    ##     ## ########   ######   #######   ######     ##    ##     ## ########  ######## ########
+#
+# **************************************************************************************************
     class Adjustable:
 
         def __init__(self, in_value, min_value=float('-inf'), max_value=float('inf')):
@@ -307,6 +342,7 @@ class SpriteItem:
         if not self.visible:
             return
         if self.updated:
+            # Get the source image onto surface
             if self.windowed:
                 target_width = self.iw.value()
                 target_height = self.ih.value()
@@ -320,22 +356,28 @@ class SpriteItem:
                 surface = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)), pygame.SRCALPHA)
                 image_rect = self.image_rect
             surface.blit(self.image.surface, (0, 0), image_rect)
-            scaled_image = pygame.transform.scale(surface, (self.w.value(), self.h.value()))
+            # Scale surface to the required size on screen
+            surface = pygame.transform.scale(surface, (self.w.value(), self.h.value()))
+            # If rotated, turn the image and re-calculate width and height
             if self.rot.value() != 0:
-                scaled_image = pygame.transform.rotate(scaled_image, self.rot.value() * -1)
+                surface = pygame.transform.rotate(surface, self.rot.value() * -1)
+                new_rect = surface.get_rect(center=(target_width / 2, target_height / 2))
+                target_height = new_rect.height
+                target_width = new_rect.width
+            # If the whole sprite has transparency, add that to the existing alpha channel
             if self.alpha.value() > 0:
                 # convert transparency 0->100 to alpha 255->0
-                tmp = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)), pygame.SRCALPHA)
+                tmp = pygame.Surface((int(target_width), int(target_height)), pygame.SRCALPHA)
                 tmp.fill((255, 255, 255, int(255 - (255 * self.alpha.value() / 100))))
-                scaled_image.blit(tmp, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+                surface.blit(tmp, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
             position = pygame.Rect(self.x.value() - (self.w.value() / 2),
                                    self.y.value() - (self.h.value() / 2),
                                    target_width, target_height)
-            self.previous = scaled_image, position
+            self.previous = surface, position
             self.updated = False
         else:
-            scaled_image, position = self.previous
-        screen.blit(scaled_image, position)
+            surface, position = self.previous
+        screen.blit(surface, position)
 
     def dump(self):
         return "%s at %f,%f,%d" % (self.tag,
