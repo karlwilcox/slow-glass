@@ -290,13 +290,13 @@ class PlaceAtCommand(Command):
 
 # *************************************************************************************************
 #
-#    ########  ##          ###     ######  ########       ###     ######
-#    ##     ## ##         ## ##   ##    ## ##            ## ##   ##    ##
-#    ##     ## ##        ##   ##  ##       ##           ##   ##  ##
-#    ########  ##       ##     ## ##       ######      ##     ##  ######
-#    ##        ##       ######### ##       ##          #########       ##
-#    ##        ##       ##     ## ##    ## ##          ##     ## ##    ##
-#    ##        ######## ##     ##  ######  ########    ##     ##  ######
+#    ########  ##     ## ########       ###     ######
+#    ##     ## ##     ##    ##         ## ##   ##    ##
+#    ##     ## ##     ##    ##        ##   ##  ##
+#    ########  ##     ##    ##       ##     ##  ######
+#    ##        ##     ##    ##       #########       ##
+#    ##        ##     ##    ##       ##     ## ##    ##
+#    ##         #######     ##       ##     ##  ######
 #
 # **************************************************************************************************
 
@@ -316,7 +316,6 @@ class PlaceAsCommand(Command):
         if stag is None:
             stag = location
         itag, stag = self.tag_fixup(self.params.get("itag"), stag)
-        print("%s %s" % (itag, stag))
         if itag is None:
             return True
         width = Command.globalData.options["width"]
@@ -952,7 +951,7 @@ class MakeCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "|/make|let|put : +/name ~/be ~/as */rest"
+        self.format = "|/make|let|put : +/name ~/be ~/as ~/= */rest"
 
     def do_process(self):
         name = self.params.get("name")
