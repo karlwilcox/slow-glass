@@ -65,7 +65,7 @@ class EchoCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "|/echo|say|print : */rest"
+        self.format = "|/echo|log : */rest"
 
     def do_process(self):
         print(self.params.get("rest"))
@@ -119,7 +119,7 @@ class LoadCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "|/load|upload : +/filename ~/name ~/named &/tag ~/split ?/cols ?/by ?/rows"
+        self.format = "|/load|upload : +/filename ~/named &/tag ~/split ?/cols ?/by ?/rows"
 
     def do_process(self):
         filename = os.path.join(self.scene.folder, self.scene.from_folder, self.params.get("filename")).rstrip("/")
@@ -132,7 +132,7 @@ class LoadCommand(Command):
         tag = self.scene.make_tag(tag)
         if os.path.isdir(filename):
             Command.globalData.images[tag] = images.ImageFolder(filename)
-        elif filename.lower().endswith((".jpg", ".jpeg", "png", "gif")):
+        elif filename.lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".mov", ".mp4", ".svg")):
             rows = self.params.as_int("rows")
             cols = self.params.as_int("cols")
             Command.globalData.images[tag] = images.ImageItem(filename, rows, cols)
@@ -267,16 +267,24 @@ class PlaceAtCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "=/place : +/itag ~/named &/stag +/at +/x +/y ~/depth +/z ~/size ?/w ?/h"
+        self.format = "=/place : +/itag ~/named &/stag +/at +/x +/y ~/depth +/z |/size|scale ?/w ?/h"
 
     def do_process(self):
         itag, stag = self.tag_fixup(self.params.get("itag"), self.params.get("stag"))
         if itag is None:
             return True
+        sw = None
+        sh = None
         x = self.params.as_float("x", "number for x coord")
         y = self.params.as_float("y", "number for y coord")
-        w = self.params.as_float("w")
-        h = self.params.as_float("h")
+        if self.params.get("size") is not None and self.params.get("size") == "scale":
+            w = None
+            h = None
+            sw = self.params.as_float("w")
+            sh = self.params.as_float("h")
+        else:
+            w = self.params.as_float("w")
+            h = self.params.as_float("h")
         z = self.params.as_float("z")
         existing = Command.globalData.sprites.get_sprite(stag)
         if existing is not None:
@@ -287,6 +295,8 @@ class PlaceAtCommand(Command):
                 Command.globalData.sprites.sprites_set_depth(stag, existing.depth)
         else:
             Command.globalData.sprites.sprite_add(sprites.SpriteItem(itag, stag, self.scene, x, y, w, h, z))
+        if sw is not None:
+            Command.globalData.sprites.get_sprite(stag).scale(sw, sh, 0)
 
 # *************************************************************************************************
 #
@@ -616,7 +626,7 @@ class ScaleCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "|/scale|rescale : +/tag ~/by +/xpct #/ypct ~/in */time"
+        self.format = "|/scale|rescale : +/tag |/by|to +/xpct #/ypct ~/in */time"
 
     def do_process(self):
         tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
@@ -766,31 +776,63 @@ class RateCommand(Command):
 
 # *************************************************************************************************
 #
-#    ########    ###    ########  ########
-#    ##         ## ##   ##     ## ##
-#    ##        ##   ##  ##     ## ##
-#    ######   ##     ## ##     ## ######
-#    ##       ######### ##     ## ##
-#    ##       ##     ## ##     ## ##
-#    ##       ##     ## ########  ########
+#    ########     ###    ########  ##    ##       ## ##       ####  ######   ##     ## ########
+#    ##     ##   ## ##   ##     ## ##   ##       ##  ##        ##  ##    ##  ##     ##    ##
+#    ##     ##  ##   ##  ##     ## ##  ##       ##   ##        ##  ##        ##     ##    ##
+#    ##     ## ##     ## ########  #####       ##    ##        ##  ##   #### #########    ##
+#    ##     ## ######### ##   ##   ##  ##     ##     ##        ##  ##    ##  ##     ##    ##
+#    ##     ## ##     ## ##    ##  ##   ##   ##      ##        ##  ##    ##  ##     ##    ##
+#    ########  ##     ## ##     ## ##    ## ##       ######## ####  ######   ##     ##    ##
 #
 # **************************************************************************************************
 
 
-class FadeCommand(Command):
+class BrightnessCommand(Command):
     """
-        fade tag to num (Set transparency of sprite from 0 to 100)
+        set darkness/lightness of tag to num (make image darker/lighter)
     """
 
     def __init__(self):
         super().__init__()
-        self.format = "~/set |/fade|transparency ~/of : +/tag ~/to +/value ~/in */time"
+        self.format = "~/set |/darken|darkness|lightness|lighten ~/of : +/tag ~/to +/value ~/in */time"
+
+    def do_process(self):
+        tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
+        rate = timing.Duration(self.params.get("time")).as_seconds()
+        if tag is not None:
+            if ("darken", "darkness") in self.params.command:
+                Command.globalData.sprites.get_sprite(tag).darken(self.params.as_int("value"), rate)
+            else:
+                Command.globalData.sprites.get_sprite(tag).lighten(self.params.as_int("value"), rate)
+
+# *************************************************************************************************
+#
+#    ######## ########     ###    ##    ##  ######
+#       ##    ##     ##   ## ##   ###   ## ##    ##
+#       ##    ##     ##  ##   ##  ####  ## ##
+#       ##    ########  ##     ## ## ## ##  ######
+#       ##    ##   ##   ######### ##  ####       ##
+#       ##    ##    ##  ##     ## ##   ### ##    ##
+#       ##    ##     ## ##     ## ##    ##  ######
+#
+# **************************************************************************************************
+
+
+class TransCommand(Command):
+    """
+        set trans of tag to num (Set transparency of sprite from 0 to 100)
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.format = "~/set |/trans|transparency ~/of : +/tag ~/to +/value ~/in */time"
 
     def do_process(self):
         tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
         rate = timing.Duration(self.params.get("time")).as_seconds()
         if tag is not None:
             Command.globalData.sprites.get_sprite(tag).trans(self.params.as_int("value"), rate)
+
 
 # *************************************************************************************************
 #

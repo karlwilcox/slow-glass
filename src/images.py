@@ -6,7 +6,12 @@ import pygame
 class ImageItem:
 
     def __init__(self, filename, rows=1, columns=1):
-        self.surface = pygame.image.load(filename)
+        self.movie = None
+        self.surface = None
+        if filename.lower().endswith((".gif", ".mov", ".mp4")):
+            self.movie = filename
+        else:
+            self.surface = pygame.image.load(filename)
         self.rows = rows if rows is not None else 1
         self.columns = columns if columns is not None else 1
         self.num_frames = self.rows * self.columns
@@ -61,8 +66,13 @@ class ImageFolder(ImageItem):
         self.current_file = 0
         super().__init__(self.file_list[0])
 
-    def get_next_frame(self):
-        self.current_file += 1
+    def get_next_frame(self, advance_by=1):
+        self.current_file += advance_by
         if self.current_file >= len(self.file_list):
             self.current_file = 0
         self.surface = pygame.image.load(self.file_list[self.current_file])
+
+class Movie(ImageItem):
+
+    def __init__(self, move_file):
+        self.move_file = move_file

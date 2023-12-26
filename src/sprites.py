@@ -222,6 +222,8 @@ class SpriteItem:
         self.h = self.Adjustable(h)
         self.rot = self.Adjustable(0, -360, 360)
         self.alpha = self.Adjustable(0, 0, 100)
+        self.dark = self.Adjustable(0, 0, 100)
+        self.light = self.Adjustable(0, 0, 100)
         self.visible = True
         self.paused = False
         self.animation_rate = self.Adjustable(0)
@@ -233,6 +235,7 @@ class SpriteItem:
         self.iw = self.Adjustable(0)
         self.updated = True
         self.previous = None
+        self.transition = None
 
     def reposition(self, centre_x, centre_y, width=None, height=None, depth=None):
         self.x = self.Adjustable(centre_x)
@@ -265,8 +268,14 @@ class SpriteItem:
         self.h.set_target_value(new_height, seconds)
 
     def scale(self, width_pct, height_pct, seconds):
-        self.w.set_target_value(self.w.value() * (width_pct / 100), seconds)
-        self.h.set_target_value(self.h.value() * (height_pct / 100), seconds)
+        if height_pct is None or height_pct < 0:
+            height_pct = width_pct
+        # This sets the scale as a percentage of the original image value
+        self.w.set_target_value(self.image_rect.width * (width_pct / 100), seconds)
+        self.h.set_target_value(self.image_rect.height * (height_pct / 100), seconds)
+        # This sets the scale as a percentage of its current size - take your pick...
+        # self.w.set_target_value(self.w.value() * (width_pct / 100), seconds)
+        # self.h.set_target_value(self.h.value() * (height_pct / 100), seconds)
 
     def turn_to(self, angle, seconds):
         self.rot.set_target_value(angle, seconds)
@@ -276,6 +285,12 @@ class SpriteItem:
 
     def trans(self, value, seconds):
         self.alpha.set_target_value(value, seconds)
+
+    def lighten(self, value, seconds):
+        self.light.set_target_value(value, seconds)
+
+    def darken(self, value, seconds):
+        self.dark.set_target_value(value, seconds)
 
     def set_animation_rate(self, value, seconds):
         self.animation_rate.set_target_value(value, seconds)
@@ -302,6 +317,9 @@ class SpriteItem:
         self.iy.set_target_value(iy)
         self.iw.set_target_value(iw)
         self.ih.set_target_value(ih)
+
+    def set_transition(self, type):
+        pass
 
     def zoom_to(self, width, height, seconds):
         if not self.windowed:
@@ -364,6 +382,19 @@ class SpriteItem:
                 new_rect = surface.get_rect(center=(target_width / 2, target_height / 2))
                 target_height = new_rect.height
                 target_width = new_rect.width
+            if self.light.value() > 0:
+                # Make sprite darker
+                tmp = pygame.Surface((int(target_width), int(target_height)), pygame.SRCALPHA)
+                lightness = int(255 * self.light.value() / 100)
+                tmp.fill((lightness, lightness, lightness))
+                surface.blit(tmp, (0, 0), special_flags=pygame.BLEND_MAX)
+            # If the whole sprite has transparency, add that to the existing alpha channel
+            if self.dark.value() > 0:
+                # Make sprite darker
+                tmp = pygame.Surface((int(target_width), int(target_height)), pygame.SRCALPHA)
+                darkness = int(255 - (255 * self.dark.value() / 100))
+                tmp.fill((darkness, darkness, darkness))
+                surface.blit(tmp, (0, 0), special_flags=pygame.BLEND_MIN)
             # If the whole sprite has transparency, add that to the existing alpha channel
             if self.alpha.value() > 0:
                 # convert transparency 0->100 to alpha 255->0
@@ -373,8 +404,13 @@ class SpriteItem:
             position = pygame.Rect(self.x.value() - (self.w.value() / 2),
                                    self.y.value() - (self.h.value() / 2),
                                    target_width, target_height)
+            # if transition is not None:
+            #     transition.between(self.previous, (surface,position))
             self.previous = surface, position
             self.updated = False
+        elif self.transition is not None:
+            surface, position = self.previous
+            # surface, position = transition.update()
         else:
             surface, position = self.previous
         screen.blit(surface, position)
