@@ -218,6 +218,8 @@ class Variables:
 
     @staticmethod
     def true_or_false(word):
+        if word is None:
+            return False
         return not (word.lower() in ["false", "none", "no"] or word[0] == "0")
 
     @staticmethod

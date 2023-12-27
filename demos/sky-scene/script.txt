@@ -8,11 +8,16 @@ scene yellow-plane
         load yellow-plane.png named plane1
         log yellow plane - https://commons.wikimedia.org/wiki/File:Model_plane_flying_at_Bonchester_Heights_-_geograph.org.uk_-_5627871.jpg
         place plane1 at -200,200,50 scale 50
+        set blur of plane1 to 10
         darken plane1 to 40
         move plane1 to 2300, 600 in 30 seconds
         scale plane1 to 100, 100 in the same time
         darken plane1 to 10 in the same time
         speed plane1 to 120 in the same time
+        set blur of plane1 to 0 in 5 seconds
+
+    when ($plane1.x > 1400)
+        rotate plane1 by -30 in 5 seconds
 
     after 1 minute
         stop
@@ -21,9 +26,11 @@ end scene
 # main scene
     begin
         load evening-sky.png named sky
+        load foreground.png
         put sky as background
+        put foreground as ground depth 10
         window background at $CENTREX, $CENTREY, $WIDTH, $HEIGHT
-        scroll background to 5277, $CENTREY in 3 minutes
+        move window background to 5277, $CENTREY in 3 minutes
 
 after 3 seconds
     start yellow-plane

@@ -17,7 +17,8 @@ class Action:
 
     def triggered(self):
         for trigger in self.triggers:
-            Action.variables.set_var("TRIGGER", trigger.__class__.__name__)
+            name = trigger.__class__.__name__
+            Action.variables.set_var("TRIGGER", name)
             if trigger.triggered:
                 return True
         return False

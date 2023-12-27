@@ -132,10 +132,15 @@ class LoadCommand(Command):
         tag = self.scene.make_tag(tag)
         if os.path.isdir(filename):
             Command.globalData.images[tag] = images.ImageFolder(filename)
-        elif filename.lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".mov", ".mp4", ".svg")):
+        elif filename.lower().endswith((".jpg", ".jpeg", ".png", ".svg")):
             rows = self.params.as_int("rows")
             cols = self.params.as_int("cols")
-            Command.globalData.images[tag] = images.ImageItem(filename, rows, cols)
+            if rows is not None and cols is not None:
+                Command.globalData.images[tag] = images.CellImage(filename, rows, cols)
+            else:
+                Command.globalData.images[tag] = images.SimpleImage(filename)
+        elif filename.lower().endswith((".gif", ".mov", ".mp4")):
+            Command.globalData.images[tag] = images.Movie(filename)
         elif filename.lower().endswith((".wav", ".ogg")):
             Command.globalData.sounds[tag] = pygame.mixer.Sound(filename)
             Command.globalData.sounds[tag].set_volume(0.5)
@@ -296,7 +301,7 @@ class PlaceAtCommand(Command):
         else:
             Command.globalData.sprites.sprite_add(sprites.SpriteItem(itag, stag, self.scene, x, y, w, h, z))
         if sw is not None:
-            Command.globalData.sprites.get_sprite(stag).scale(sw, sh, 0)
+            Command.globalData.sprites.get_sprite(stag).scale_to(sw, sh, 0)
 
 # *************************************************************************************************
 #
@@ -318,7 +323,7 @@ class PlaceAsCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "=/put : +/itag ~/named &/stag +/as |/background|top|bottom|left|right|ground|sky */rest"
+        self.format = "=/put : +/itag ~/named &/stag +/as |/background|top|bottom|left|right|ground|sky ~/depth ?/depth"
 
     def do_process(self):
         stag = self.params.get("stag")
@@ -330,15 +335,15 @@ class PlaceAsCommand(Command):
             return True
         width = Command.globalData.options["width"]
         height = Command.globalData.options["height"]
-        image_width = Command.globalData.images[itag].frame_width
-        image_height = Command.globalData.images[itag].frame_height
-        image_ar = image_width / image_height
+        image_width = Command.globalData.images[itag].image_rect.width
+        image_height = Command.globalData.images[itag].image_rect.height
+        depth = self.params.as_int("depth")
         if location == "background":
             x = width / 2
             y = height / 2
             w = width
             h = height
-            z = 1000
+            z = depth or 1000
         elif location == "bottom" or location == "ground":
             x = width / 2
             w = width
@@ -346,7 +351,7 @@ class PlaceAsCommand(Command):
             h = image_height * (width / image_width)
             # and move to the bottom
             y = height - (h / 2)
-            z = 980
+            z = depth or 980
         elif location == "top" or location == "sky":
             x = width / 2
             w = width
@@ -354,7 +359,7 @@ class PlaceAsCommand(Command):
             h = image_height * (width / image_width)
             # and move to the top
             y = h / 2
-            z = 980
+            z = depth or 980
         elif location == "left":
             y = height / 2
             h = height
@@ -362,7 +367,7 @@ class PlaceAsCommand(Command):
             w = image_width * (height / image_height)
             # and move to the left
             x = w /2
-            z = 960
+            z = depth or 960
         elif location == "left":
             y = height / 2
             h = height
@@ -370,7 +375,7 @@ class PlaceAsCommand(Command):
             w = image_width * (height / image_height)
             # and move to the right
             x = width - (w /2)
-            z = 960
+            z = depth or 960
         else:
             print("Unknown location: " + self.params.get("rest"))
             return
@@ -432,7 +437,7 @@ class ZoomCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "=/zoom : +/tag ~/to +/iw +/ih ~/in */time"
+        self.format = "=/zoom =/window : +/tag ~/to +/iw +/ih ~/in */time"
 
     def do_process(self):
         tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
@@ -455,15 +460,27 @@ class ZoomCommand(Command):
 #
 # **************************************************************************************************
 
+# *************************************************************************************************
+#
+#    ##     ##  #######  ##     ## ########    ##      ## #### ##    ## ########   #######  ##      ##
+#    ###   ### ##     ## ##     ## ##          ##  ##  ##  ##  ###   ## ##     ## ##     ## ##  ##  ##
+#    #### #### ##     ## ##     ## ##          ##  ##  ##  ##  ####  ## ##     ## ##     ## ##  ##  ##
+#    ## ### ## ##     ## ##     ## ######      ##  ##  ##  ##  ## ## ## ##     ## ##     ## ##  ##  ##
+#    ##     ## ##     ##  ##   ##  ##          ##  ##  ##  ##  ##  #### ##     ## ##     ## ##  ##  ##
+#    ##     ## ##     ##   ## ##   ##          ##  ##  ##  ##  ##   ### ##     ## ##     ## ##  ##  ##
+#    ##     ##  #######     ###    ########     ###  ###  #### ##    ## ########   #######   ###  ###
+#
+# **************************************************************************************************
 
-class ScrollCommand(Command):
+
+class MoveWindowCommand(Command):
     """
-        scroll tag [to] x,y [in] [time] (changes position of sprite on source window)
+        scroll window of tag [to] x,y [in] [time] (changes position of sprite on source window)
     """
 
     def __init__(self):
         super().__init__()
-        self.format = "=/scroll : +/tag ~/to +/ix +/iy ~/in */time"
+        self.format = "=/move =/window : ~/of +/tag ~/to +/ix +/iy ~/in */time"
 
     def do_process(self):
         tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
@@ -572,6 +589,36 @@ class SpeedCommand(Command):
         rate = timing.Duration(self.params.get("time")).as_seconds()
         Command.globalData.sprites.get_sprite(tag).set_speed(speed, rate)
 
+# *************************************************************************************************
+#
+#    ########  ##       ##     ## ########
+#    ##     ## ##       ##     ## ##     ##
+#    ##     ## ##       ##     ## ##     ##
+#    ########  ##       ##     ## ########
+#    ##     ## ##       ##     ## ##   ##
+#    ##     ## ##       ##     ## ##    ##
+#    ########  ########  #######  ##     ##
+#
+# **************************************************************************************************
+
+
+class BlurCommand(Command):
+    """
+        [set] blur [of] s-tag [to] <value> [in <time>] - change blurriness of sprite
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.format = "~/set =/blur ~/of : +/tag ~/to +/blur ~/in */time"
+
+    def do_process(self):
+        tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
+        if tag is None:
+            return True
+        bluriness = self.params.as_float("blur", "Bluriness (0-100)")
+        rate = timing.Duration(self.params.get("time")).as_seconds()
+        Command.globalData.sprites.get_sprite(tag).set_blur(bluriness, rate)
+
 
 # *************************************************************************************************
 #
@@ -637,7 +684,10 @@ class ScaleCommand(Command):
         if height_scale is None:
             height_scale = width_scale
         rate = timing.Duration(self.params.get("time")).as_seconds()
-        Command.globalData.sprites.get_sprite(tag).scale(width_scale, height_scale, rate)
+        if self.params.get("by") == "by":
+            Command.globalData.sprites.get_sprite(tag).scale_by(width_scale, height_scale, rate)
+        else:
+            Command.globalData.sprites.get_sprite(tag).scale_to(width_scale, height_scale, rate)
 
 
 # *************************************************************************************************
@@ -739,9 +789,9 @@ class AdvanceCommand(Command):
             if self.params.get("by") == "by":
                 if "reverse" in self.params.command:
                     frame *= -1
-                Command.globalData.sprites.get_sprite(tag).get_next_frame(frame)
+                Command.globalData.sprites.get_sprite(tag).next_frame(frame)
             else:
-                Command.globalData.sprites.get_sprite(tag).get_frame(frame)
+                Command.globalData.sprites.get_sprite(tag).move_to(frame)
 
 
 # *************************************************************************************************

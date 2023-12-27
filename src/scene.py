@@ -1,6 +1,7 @@
 import re
 from defaults import *
 import action, params
+from collections import namedtuple
 from triggers import *  # IMPORTANT - Keep this line, required for globals()
 
 
@@ -25,26 +26,44 @@ class Scene:
                        "EachTime": "=/each ~/time: */rest",
                        "Every": "=/every : */rest",
                        "When": "=/when : */rest",
+                       "While": "=/while : */rest",
                        }
         self.enabled = True
         trigger = None
         self.from_folder = ""  # clear each time
-        triggers_for_action = []
         found_action = False
         found_trigger = False
-        # Build list of actions (everytime, in case variables have changed)
+        # We go through the whole textual content of the scene
+        # to build "action groups" consisting of a list of one or more
+        # triggers and a list of one or more actions.
+        # When we have all the groups we go through each one:
+        # if any of the triggers is start:
+        #     run all the actions now
+        #     remove the start trigger from the list
+        # if the trigger list still contains triggers:
+        #    add the triggers to the scene-wide list of triggers
+        #    add the actions to the scene-wide list of actions
+        ActionGroup = namedtuple("ActionGroup", ("triggers", "actions"))
+        action_group = ActionGroup([], [])
+        run_now = False
         for content_line in self.content:
             words = re.split(WORD_SPLIT, content_line)
             for klass_name, trigger_format in trigger_map.items():
                 trigger_params = params.ParamList(words, trigger_format)
                 if trigger_params.valid:  # This is a trigger
                     if found_action:
-                        triggers_for_action = []
+                        if len(action_group.triggers) > 0 and len(action_group.actions) > 0:
+                            self.trigger_list += action_group.triggers
+                            self.action_list += action_group.actions
+                        action_group = ActionGroup([], [])
+                        run_now = False
                         found_action = False
-                    klass = globals()[klass_name]
-                    trigger = klass(trigger_params.get("rest"), self.name)
-                    self.trigger_list.append(trigger)
-                    triggers_for_action.append(trigger)
+                    if klass_name == "Start":
+                        run_now = True
+                    else:
+                        klass = globals()[klass_name]
+                        trigger = klass(trigger_params.get("rest"), self.name)
+                        action_group.triggers.append(trigger)
                     found_trigger = True
                     break
             if found_trigger:
@@ -55,16 +74,17 @@ class Scene:
             # Remove any initial syntactic sugar...
             if content_line.startswith("and "):
                 content_line = content_line[4:]
-            # But actions are only expanded once triggered
             this_action = action.Action(content_line)
-            this_action.triggers = triggers_for_action
-            self.action_list.append(this_action)
-        # And carry out any immediate actions
-        for current_action in self.action_list:
-            for current_trigger in current_action.triggers:
-                current_trigger.reset()
-            if current_action.triggered():
-                self.data.command_dispatcher.dispatch(current_action, self)
+            if run_now:
+                if this_action.conditional(self.data.vars, self.name):
+                    self.data.command_dispatcher.dispatch(this_action, self)
+            else:
+                this_action.triggers = action_group.triggers
+                action_group.actions.append(this_action)
+        # deal with the last group (if present)
+        if len(action_group.triggers) > 0 and len(action_group.actions) > 0:
+            self.trigger_list += action_group.triggers
+            self.action_list += action_group.actions
 
     def update_triggers(self, millis):
         for trigger in self.trigger_list:

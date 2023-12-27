@@ -41,12 +41,11 @@ class Trigger:
         can_eval, self.expanded = self.variables.expand_all(self.content_line, self.scene_name)
         if can_eval:
             self.expanded = self.variables.evaluate(self.expanded)
+        else:
+            self.expanded = None
 
     def clear(self):
         self.triggered = False
-
-    def reset(self):
-        pass
 
     def test_update(self, millis):
         if self.next_update < millis:
@@ -320,7 +319,39 @@ class OnClick(Trigger):
 class When(Trigger):
     """
     when (expression)
-    Commands are run when expression evaluates to True. The expression is evaluated once per second
+    Commands are run ONCE when expression evaluates to True. The expression is evaluated once per second
+    Expression is any valid Python code but must be fully enclosed in round brackets (may be restricted later)
+    Slow glass variables will be substituted before the expression is evaluated.
+    """
+
+    def __init__(self, words, scene):
+        super().__init__(words, scene)
+
+    def update(self, millis):
+        if self.expired:
+            return
+        self.expand()
+        if self.variables.true_or_false(self.expanded):
+            self.triggered = True
+            self.expired = True
+
+# *************************************************************************************************
+#
+#    ##      ## ##     ## #### ##       ########
+#    ##  ##  ## ##     ##  ##  ##       ##
+#    ##  ##  ## ##     ##  ##  ##       ##
+#    ##  ##  ## #########  ##  ##       ######
+#    ##  ##  ## ##     ##  ##  ##       ##
+#    ##  ##  ## ##     ##  ##  ##       ##
+#     ###  ###  ##     ## #### ######## ########
+#
+# **************************************************************************************************
+
+
+class While(Trigger):
+    """
+    when (expression)
+    Commands are run ONCE when expression evaluates to True. The expression is evaluated once per second
     Expression is any valid Python code but must be fully enclosed in round brackets (may be restricted later)
     Slow glass variables will be substituted before the expression is evaluated.
     """

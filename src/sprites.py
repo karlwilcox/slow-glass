@@ -215,15 +215,15 @@ class SpriteItem:
         self.x = self.Adjustable(centre_x)
         self.y = self.Adjustable(centre_y)
         self.image = SpriteItem.globalData.images[itag]
-        self.image_rect = self.image.get_frame_number(0)
-        w = width if width is not None else self.image_rect.width
-        h = height if height is not None else self.image_rect.height
+        w = width or self.image.image_rect.width
+        h = height or self.image.image_rect.height
         self.w = self.Adjustable(w)
         self.h = self.Adjustable(h)
         self.rot = self.Adjustable(0, -360, 360)
         self.alpha = self.Adjustable(0, 0, 100)
         self.dark = self.Adjustable(0, 0, 100)
         self.light = self.Adjustable(0, 0, 100)
+        self.blur = self.Adjustable(0, 0, 100)
         self.visible = True
         self.paused = False
         self.animation_rate = self.Adjustable(0)
@@ -267,15 +267,19 @@ class SpriteItem:
         self.w.set_target_value(new_width, seconds)
         self.h.set_target_value(new_height, seconds)
 
-    def scale(self, width_pct, height_pct, seconds):
+    def scale_to(self, width_pct, height_pct, seconds):
         if height_pct is None or height_pct < 0:
             height_pct = width_pct
         # This sets the scale as a percentage of the original image value
-        self.w.set_target_value(self.image_rect.width * (width_pct / 100), seconds)
-        self.h.set_target_value(self.image_rect.height * (height_pct / 100), seconds)
+        self.w.set_target_value(self.image.image_rect.width * (width_pct / 100), seconds)
+        self.h.set_target_value(self.image.image_rect.height * (height_pct / 100), seconds)
+
+    def scale_by(self, width_pct, height_pct, seconds):
+        if height_pct is None or height_pct < 0:
+            height_pct = width_pct
         # This sets the scale as a percentage of its current size - take your pick...
-        # self.w.set_target_value(self.w.value() * (width_pct / 100), seconds)
-        # self.h.set_target_value(self.h.value() * (height_pct / 100), seconds)
+        self.w.set_target_value(self.w.value() * (width_pct / 100), seconds)
+        self.h.set_target_value(self.h.value() * (height_pct / 100), seconds)
 
     def turn_to(self, angle, seconds):
         self.rot.set_target_value(angle, seconds)
@@ -294,6 +298,9 @@ class SpriteItem:
 
     def set_animation_rate(self, value, seconds):
         self.animation_rate.set_target_value(value, seconds)
+
+    def set_blur(self, value, seconds):
+        self.blur.set_target_value(value, seconds)
 
     def get_speed(self) -> float:
         x_speed = self.x.get_delta()
@@ -336,11 +343,11 @@ class SpriteItem:
         self.iy.set_target_value(new_iy, seconds)
 
     def advance(self, num_of_frames):
-        self.image.get_next_frame(num_of_frames)
+        self.image.next_frame(num_of_frames)
         self.updated = True
 
     def get_frame(self, frame_num):
-        self.image.get_frame_number(frame_num)
+        self.image.move_to_frame(frame_num)
         self.updated = True
 
     def update(self):
@@ -353,7 +360,7 @@ class SpriteItem:
         if self.animation_rate.value() > 0:
             if Timer.millis() - self.last_frame_millis > self.animation_rate.value() * 1000:
                 self.last_frame_millis = Timer.millis()
-                self.image_rect = self.image.get_next_frame()
+                self.image.next_frame()
                 self.updated = True
 
     def display(self, screen):
@@ -371,8 +378,8 @@ class SpriteItem:
             else:
                 target_width = self.w.value()
                 target_height = self.h.value()
-                surface = pygame.Surface((int(self.image.frame_width), int(self.image.frame_height)), pygame.SRCALPHA)
-                image_rect = self.image_rect
+                surface = pygame.Surface((int(self.image.image_rect.width), int(self.image.image_rect.height)), pygame.SRCALPHA)
+                image_rect = self.image.image_rect
             surface.blit(self.image.surface, (0, 0), image_rect)
             # Scale surface to the required size on screen
             surface = pygame.transform.scale(surface, (self.w.value(), self.h.value()))
@@ -395,6 +402,11 @@ class SpriteItem:
                 darkness = int(255 - (255 * self.dark.value() / 100))
                 tmp.fill((darkness, darkness, darkness))
                 surface.blit(tmp, (0, 0), special_flags=pygame.BLEND_MIN)
+            if self.blur.value() > 0:
+                tmp = pygame.Surface((int(target_width), int(target_height)), pygame.SRCALPHA)
+                bluriness = int(self.blur.value() / 4)
+                pygame.transform.gaussian_blur(surface, bluriness, True, tmp)
+                surface.blit(tmp, (0, 0))
             # If the whole sprite has transparency, add that to the existing alpha channel
             if self.alpha.value() > 0:
                 # convert transparency 0->100 to alpha 255->0
