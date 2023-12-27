@@ -214,7 +214,7 @@ class SpriteItem:
         self.depth = depth
         self.x = self.Adjustable(centre_x)
         self.y = self.Adjustable(centre_y)
-        self.image = SpriteItem.globalData.images[itag]
+        self.image = scene.images[itag]
         w = width or self.image.image_rect.width
         h = height or self.image.image_rect.height
         self.w = self.Adjustable(w)

@@ -16,8 +16,8 @@ scene yellow-plane
         speed plane1 to 120 in the same time
         set blur of plane1 to 0 in 5 seconds
 
-    when ($plane1.x > 1400)
-        rotate plane1 by -30 in 5 seconds
+   # when ($plane1.x > 1400)
+   #     rotate plane1 by -30 in 5 seconds
 
     after 1 minute
         stop

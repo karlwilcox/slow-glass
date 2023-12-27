@@ -102,7 +102,7 @@ def main():
     else:
         screen = pygame.display.set_mode((globalData.options["width"],
                                           globalData.options["height"]))
-    window = pygame.Surface((globalData.options["width"], globalData.options["height"]))
+    window = pygame.Surface((globalData.options["width"], globalData.options["height"]), pygame.SRCALPHA)
     grey = pygame.Color(127, 127, 127)
     clock = pygame.time.Clock()
     # Main loop
@@ -111,7 +111,15 @@ def main():
         handle_events(globalData)
         do_actions(globalData, timing.Timer.millis())
         clock.tick(FRAMERATE)
-        globalData.sprites.display_all(window)
+        scene_map = {}
+        for name, scene in globalData.scenes.items():
+            if scene.enabled:
+                scene_map[name] = scene.depth
+        ordered_scenes = sorted(scene_map, key=scene_map.get, reverse=True)
+        for scene_name in ordered_scenes:
+            scene = globalData.scenes[scene_name]
+            scene.sprites.display_all(scene.surface)
+            window.blit(scene.surface, (0, 0))
         if rotation.startswith("r"):
             screen.blit(pygame.transform.rotate(window, -90), (0, 0))
         elif rotation.startswith("l"):

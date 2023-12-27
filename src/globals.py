@@ -9,8 +9,6 @@ class Globals:
         # global data structures
         self.scenes = {}
         self.sprites = sprites.SpriteList()
-        self.sounds = {}
-        self.images = {}
         self.groups = []
         self.vars = vars.Variables(self)
         self.command_dispatcher = dispatcher.Dispatcher()

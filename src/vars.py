@@ -94,7 +94,7 @@ class Variables:
             value = random.randrange(0, height - 1)
         # OK, let's see if it is a sprite
         if prop is not None:
-            tag = self.data.scenes[scene].resolve_tag(name, self.data.sprites.keys())
+            tag = self.data.scenes[scene].resolve_tag(name, scene.sprites.keys())
             if tag is not None:
                 if prop.startswith("x"):
                     value = self.data.sprites.get_sprite(tag).x.value()

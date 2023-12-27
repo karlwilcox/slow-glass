@@ -1,6 +1,6 @@
-import re
+import re, pygame
 from defaults import *
-import action, params
+import action, params, sprites
 from collections import namedtuple
 from triggers import *  # IMPORTANT - Keep this line, required for globals()
 
@@ -16,8 +16,13 @@ class Scene:
         self.folder = in_folder
         self.from_folder = ""
         self.trigger_list = []
+        self.surface = None
+        self.sprites = sprites.SpriteList()
+        self.images = {}
+        self.sounds = {}
+        self.depth = 0
 
-    def start(self):
+    def start(self, depth=None):
         trigger_map = {"Start": "=/begin : */rest",
                        "After": "=/after : */rest",
                        "OnKey": "=/on |/key|keypress ~/press : */rest",
@@ -29,7 +34,9 @@ class Scene:
                        "While": "=/while : */rest",
                        }
         self.enabled = True
-        trigger = None
+        if depth is not None:
+            self.depth = depth
+        self.surface = pygame.Surface((self.data.options["width"], self.data.options["height"]), pygame.SRCALPHA)
         self.from_folder = ""  # clear each time
         found_action = False
         found_trigger = False
@@ -108,6 +115,7 @@ class Scene:
             # however, sounds play to the end. TODO, is this OK?
             # And clear all variables
             self.data.vars.purge(self.name)
+            self.surface = None
 
     def add_content(self, more_content):
         self.content.append(more_content)
@@ -124,12 +132,9 @@ class Scene:
             return None
         if ":" in in_tag:  # we have a fully-qualified tag, return it
             return in_tag
-        else:  # first, look for a local tag in the key_list
-            new_tag = "%s:%s" % (self.name, in_tag)
-            if new_tag in key_list:
-                return new_tag
-            elif in_tag in key_list:
-                return in_tag
+        # first, look for a local tag in the key_list
+        elif in_tag in key_list:
+            return in_tag
         print("Sprite %s not found in scene %s" % (in_tag, self.name))
         return None
 

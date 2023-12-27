@@ -100,5 +100,6 @@ def read(data, filename=None, folder=None):
             # and the top_level
             if len(top_level) > 0:
                 data.scenes[TOP_LEVEL] = Scene(TOP_LEVEL, folder, top_level, data)
+                data.scenes[TOP_LEVEL].depth = 1000
             else:
                 print("No top level actions, nothing will happen!")
