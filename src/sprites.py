@@ -236,6 +236,7 @@ class SpriteItem:
         self.updated = True
         self.previous = None
         self.transition = None
+        self.groups = []
 
     def reposition(self, centre_x, centre_y, width=None, height=None, depth=None):
         self.x = self.Adjustable(centre_x)
