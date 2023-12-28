@@ -248,14 +248,20 @@ class SpriteItem:
         if depth is not None:
             self.depth = depth
 
-    def move_in_time(self, new_x, new_y, seconds):
+    def move_in_time(self, new_x, new_y, seconds, relative):
+        if relative:
+            new_x = self.x.value() + new_x
+            new_y = self.y.value() + new_y
         self.x.set_target_value(new_x, seconds)
         self.y.set_target_value(new_y, seconds)
 
-    def move_at_rate(self, new_x, new_y, rate):
+    def move_at_rate(self, new_x, new_y, rate, relative):
         """
         Move to new location at  rate pixels per second
         """
+        if relative:
+            new_x = self.x.value() + new_x
+            new_y = self.y.value() + new_y
         # need the distance to work our the travel time
         x_distance = new_x - self.x.value()
         y_distance = new_y - self.y.value()
@@ -282,11 +288,10 @@ class SpriteItem:
         self.w.set_target_value(self.w.value() * (width_pct / 100), seconds)
         self.h.set_target_value(self.h.value() * (height_pct / 100), seconds)
 
-    def turn_to(self, angle, seconds):
+    def turn(self, angle, seconds, relative):
+        if relative:
+            angle = self.rot.value() + angle
         self.rot.set_target_value(angle, seconds)
-
-    def turn_by(self, angle, seconds):
-        self.rot.set_target_value(self.rot.value() + angle, seconds)
 
     def trans(self, value, seconds):
         self.alpha.set_target_value(value, seconds)

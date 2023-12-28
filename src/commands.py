@@ -295,7 +295,7 @@ class PlaceAtCommand(Command):
             existing.reposition(x, y, w, h, z)
             # depth may have changed, so re-order them
             if z is not None and z != old_depth:
-                Command.globalData.sprites.sprites_set_depth(stag, existing.depth)
+                Command.globalData.sprites.sprite_set_depth(stag, existing.depth)
         else:
             Command.globalData.sprites.sprite_add(sprites.SpriteItem(itag, stag, self.scene, x, y, w, h, z))
         if sw is not None:
@@ -539,7 +539,7 @@ class MoveCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "=/move : +/tag ~/to +/x +/y |/in|at */rest"
+        self.format = "=/move : +/tag |/to|by +/x +/y |/in|at */rest"
 
     def do_process(self):
         tag = self.scene.resolve_tag(self.params.get("tag"), Command.globalData.sprites.keys())
@@ -548,14 +548,15 @@ class MoveCommand(Command):
         x = self.params.as_float("x", "new x coord")
         y = self.params.as_float("y", "new y coord")
         in_or_at = self.params.get("in")
+        relative = self.params.get("to") == "by"
         if in_or_at == "in":
             rate = timing.Duration(self.params.get("rest")).as_seconds()
-            Command.globalData.sprites.get_sprite(tag).move_in_time(x, y, rate)
+            Command.globalData.sprites.get_sprite(tag).move_in_time(x, y, rate, relative)
         elif in_or_at == "at":
             rate = timing.Speed(self.params.get("rest")).as_pps()
-            Command.globalData.sprites.get_sprite(tag).move_at_rate(x, y, rate)
+            Command.globalData.sprites.get_sprite(tag).move_at_rate(x, y, rate, relative)
         else:
-            Command.globalData.sprites.get_sprite(tag).move_in_time(x, y, 0)
+            Command.globalData.sprites.get_sprite(tag).move_in_time(x, y, 0, relative)
 
 # *************************************************************************************************
 #
@@ -715,12 +716,9 @@ class RotateCommand(Command):
         if tag is None:
             return True
         rotation = self.params.as_float("degrees", "Degrees to turn by/to")
-        to_by = self.params.get("to").lower()
+        relative = self.params.get("to").lower() == "by"
         rate = timing.Duration(self.params.get("time")).as_seconds()
-        if to_by == "to":
-            Command.globalData.sprites.get_sprite(tag).turn_to(rotation, rate)
-        else:
-            Command.globalData.sprites.get_sprite(tag).turn_by(rotation, rate)
+        Command.globalData.sprites.get_sprite(tag).turn(rotation, rate, relative)
 
 
 # *************************************************************************************************

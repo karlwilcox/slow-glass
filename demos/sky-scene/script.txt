@@ -5,9 +5,9 @@ display height 1080
 
 scene yellow-plane
     begin
-        load yellow-plane.png named plane1
+        load yellow-plane.png
         log yellow plane - https://commons.wikimedia.org/wiki/File:Model_plane_flying_at_Bonchester_Heights_-_geograph.org.uk_-_5627871.jpg
-        place plane1 at -200,200,50 scale 50
+        place yellow-plane named plane1 at -200,200,50 scale 50
         set blur of plane1 to 10
         darken plane1 to 40
         move plane1 to 2300, 600 in 30 seconds
@@ -15,6 +15,10 @@ scene yellow-plane
         darken plane1 to 10 in the same time
         speed plane1 to 120 in the same time
         set blur of plane1 to 0 in 5 seconds
+        place yellow-plane named small-plane at 500,500,40 scale 30
+
+    every 2 seconds
+         move small-plane by 50,0
 
     when ($plane1.x > 1400)
         rotate plane1 by -30 in 5 seconds
