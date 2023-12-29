@@ -81,14 +81,20 @@ class SpriteList:
             current.depth = new_depth
             self.sprite_list.insert(new_index, current)
 
-    def display_all(self, screen):
+    def display_all(self, screen, group=None):
         # Update values of all current sprites (visible or not)
         # for adjustable in SpriteItem.Adjustable.instances:
         #     adjustable.update_value()
         # And paint them to the screen
         for sprite in self.sprite_list:
-            sprite.update()
-            sprite.display(screen)
+            if group is None:  # render everything not in a group
+                sprite.update()
+                if sprite.group is None:
+                    sprite.display(screen)
+            else:  # group is given, only render group members
+                if sprite.group == group:
+                    sprite.update()
+                    sprite.display(screen)
 
     def keys(self):
         return self.tag_list
@@ -236,7 +242,7 @@ class SpriteItem:
         self.updated = True
         self.previous = None
         self.transition = None
-        self.groups = []
+        self.group = None
 
     def reposition(self, centre_x, centre_y, width=None, height=None, depth=None):
         self.x = self.Adjustable(centre_x)
@@ -363,7 +369,9 @@ class SpriteItem:
             if value.__class__.__name__ == "Adjustable":
                 if value.update_value():
                     self.updated = True
-        if self.animation_rate.value() > 0:
+        if self.image.__class__.__name__ == "GroupImage":
+            self.image.next_frame()
+        elif self.animation_rate.value() > 0:
             if Timer.millis() - self.last_frame_millis > self.animation_rate.value() * 1000:
                 self.last_frame_millis = Timer.millis()
                 self.image.next_frame()

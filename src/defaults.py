@@ -7,5 +7,6 @@ SAFE_EVALUATION = False
 HEMISPHERE = "northern"
 
 # You should probably leave these alone...
+# WORD_SPLIT = '(\"[^\"]+\")|([,;\\s]+)'
 WORD_SPLIT = '[,;\\s]+'
 TOP_LEVEL = "__top__"

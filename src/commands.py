@@ -288,7 +288,7 @@ class PlaceAtCommand(Command):
         else:
             w = self.params.as_float("w")
             h = self.params.as_float("h")
-        z = self.params.as_float("z")
+        z = self.params.as_float("z") or 0
         existing = Command.globalData.sprites.get_sprite(stag)
         if existing is not None:
             old_depth = existing.depth
@@ -1069,7 +1069,49 @@ class CreateGroupCommand(Command):
 
     def do_process(self):
         group_name = self.params.get("group")
-        self.globalData.groups.append(group_name)
+        self.scene.data.images[group_name] = images.GroupImage(self.scene, group_name)
+
+# *************************************************************************************************
+#
+#       ###    ########  ########     ########  #######      ######   ########   #######  ##     ## ########
+#      ## ##   ##     ## ##     ##       ##    ##     ##    ##    ##  ##     ## ##     ## ##     ## ##     ##
+#     ##   ##  ##     ## ##     ##       ##    ##     ##    ##        ##     ## ##     ## ##     ## ##     ##
+#    ##     ## ##     ## ##     ##       ##    ##     ##    ##   #### ########  ##     ## ##     ## ########
+#    ######### ##     ## ##     ##       ##    ##     ##    ##    ##  ##   ##   ##     ## ##     ## ##
+#    ##     ## ##     ## ##     ##       ##    ##     ##    ##    ##  ##    ##  ##     ## ##     ## ##
+#    ##     ## ########  ########        ##     #######      ######   ##     ##  #######   #######  ##
+#
+# **************************************************************************************************
+
+
+class AddGroupCommand(Command):
+
+    def __init__(self):
+        super().__init__()
+        self.format = "=/add ~/to =/group : +/group >/list"
+
+    def do_process(self):
+        group_name = self.params.get("group")
+        if group_name is None or group_name not in Command.globalData.images.keys():
+            print("No such group: %s" % group_name)
+            return
+        for item in self.params.get("list"):
+            item = self.scene.resolve_tag(item, Command.globalData.sprites.keys())
+            if item is not None:
+                Command.globalData.sprites.get_sprite(item).group = group_name
+
+# *************************************************************************************************
+#
+#    ########  ######## ##       ######## ######## ########     ######   ########   #######  ##     ## ########
+#    ##     ## ##       ##       ##          ##    ##          ##    ##  ##     ## ##     ## ##     ## ##     ##
+#    ##     ## ##       ##       ##          ##    ##          ##        ##     ## ##     ## ##     ## ##     ##
+#    ##     ## ######   ##       ######      ##    ######      ##   #### ########  ##     ## ##     ## ########
+#    ##     ## ##       ##       ##          ##    ##          ##    ##  ##   ##   ##     ## ##     ## ##
+#    ##     ## ##       ##       ##          ##    ##          ##    ##  ##    ##  ##     ## ##     ## ##
+#    ########  ######## ######## ########    ##    ########     ######   ##     ##  #######   #######  ##
+#
+# **************************************************************************************************
+
 
 # *************************************************************************************************
 #

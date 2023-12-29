@@ -9,18 +9,17 @@ begin
 
     # Load all our resources
     load cafe.png
-    log cafe scene - https://commons.wikimedia.org/wiki/File:Vincent_van_Gogh_(1853-1890)_Caf%C3%A9terras_bij_nacht_(place_du_Forum)_Kr%C3%B6ller-M%C3%BCller_Museum_Otterlo_23-8-2016_13-35-40.JPG
+    log cafe scene - https://commons.wikimedia.org/ Van Gogh Cafe Terrace At Night
     load star1.png
     load star2.png
     load star3.png
     load lamp.png
 
     # Place them
-    put background as background
+    put cafe as background
     place star1 at 747,376,10
     place star2 at 881,60,20
-    place star3 at 342,19,30
-    place lamp at $lampx,$lampy,40
+    place lamp at 367,1014,50
 
 every frame
     # Twinkle those stars
@@ -31,4 +30,4 @@ every frame
 every 0.4 seconds
     # Jiggle that candle
     set transparency of lamp to (34 + (15 * $CHANCE))
-    move lamp to ($lampx - 5 + (10 * $CHANCE)) ($lampy - 5 + (10 * $CHANCE))
+    move lamp by (5 - (10 * $CHANCE)) (5 - (10 * $CHANCE)) in 0.4 seconds

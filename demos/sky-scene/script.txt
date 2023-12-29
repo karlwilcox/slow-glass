@@ -15,16 +15,26 @@ scene yellow-plane
         darken plane1 to 10 in the same time
         speed plane1 to 120 in the same time
         set blur of plane1 to 0 in 5 seconds
-        place yellow-plane named small-plane at 500,500,40 scale 30
-
-    every 2 seconds
-         move small-plane by 50,0
 
     when ($plane1.x > 1400)
         rotate plane1 by -30 in 5 seconds
 
     after 1 minute
         stop
+end scene
+
+scene grey-planes
+    begin
+        load grey-plane.png
+        log grey plane https://commons.wikimedia.org/wiki/File:Model_plane_flying_at_Bonchester_Heights_-_geograph.org.uk_-_5627870.jpg
+        place grey-plane named grey1 at 400,400,100
+        place grey-plane named grey2 at 600,600,110
+        place grey-plane named grey3 at 500,500,115
+        create group grey-planes
+        add to group grey-planes grey1 grey2 grey3
+        place grey-planes at 200,200,10 scale 30
+        move grey-planes to 1000,0 in 10 seconds
+        move grey3 to 1200,500 in 10 seconds
 end scene
 
 # main scene
@@ -35,6 +45,7 @@ end scene
         put foreground as ground depth 10
         window background at $CENTREX, $CENTREY, $WIDTH, $HEIGHT
         move window background to 5277, $CENTREY in 3 minutes
+        start grey-planes
 
 after 3 seconds
     start yellow-plane

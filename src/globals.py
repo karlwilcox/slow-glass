@@ -11,7 +11,6 @@ class Globals:
         self.sprites = sprites.SpriteList()
         self.sounds = {}
         self.images = {}
-        self.groups = []
         self.vars = vars.Variables(self)
         self.command_dispatcher = dispatcher.Dispatcher()
         self.options = {"width": 1080, "height": 1920, "fullscreen": False,
