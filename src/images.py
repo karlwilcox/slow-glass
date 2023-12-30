@@ -2,6 +2,7 @@ import glob
 
 from abc import abstractmethod
 import pygame
+import cv2
 
 # *************************************************************************************************
 #
@@ -209,7 +210,29 @@ class TextImage(ImageItem):
 
 class Movie(ImageItem):
 
-    def __init__(self, move_file):
+    def __init__(self, movie_file):
         super().__init__()
-        self.move_file = move_file
-        # TODO read movie file as a single image, implement get_next_frame
+        self.movie_file = movie_file
+        self.video = None
+        self.init_video()
+
+    def move_to_frame(self, number):  # not supported, just gets next frame
+        self.next_frame(number)
+
+    def next_frame(self, advance_by=1):
+        success = True
+        while success:
+            success, image = self.video.read()
+            self.surface = pygame.Surface(image)
+            return
+        # run out of frames, go back to the start
+        self.init_video()
+
+    def init_video(self):
+        self.video = cv2.VideoCapture(self.movie_file)
+        success, image = self.video.read()
+        self.surface = pygame.Surface(image)
+        self.image_rect = self.surface.get_rect()
+
+    def __del__(self):
+        self.video.release()
