@@ -1,5 +1,6 @@
 # standard libraries
 from abc import abstractmethod
+import matplotlib.colors as colors
 import os, re
 
 import pygame.mixer
@@ -1061,15 +1062,100 @@ class MakeCommand(Command):
 # **************************************************************************************************
 
 
-class CreateGroupCommand(Command):
+class CreateItemCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "=/create =/group : +/group"
+        self.format = "=/create |/group|text : +/item_name"
 
     def do_process(self):
-        group_name = self.params.get("group")
-        self.scene.data.images[group_name] = images.GroupImage(self.scene, group_name)
+        item_type = self.params.get("group")
+        item_name = self.params.get("item_name")
+        if item_type == "group":
+            self.scene.data.images[item_name] = images.GroupImage(self.scene, item_name)
+        elif item_type == "text":
+            self.scene.data.images[item_name] = images.TextImage()
+
+# *************************************************************************************************
+#
+#    ######## ######## ##     ## ########
+#       ##    ##        ##   ##     ##
+#       ##    ##         ## ##      ##
+#       ##    ######      ###       ##
+#       ##    ##         ## ##      ##
+#       ##    ##        ##   ##     ##
+#       ##    ######## ##     ##    ##
+#
+# **************************************************************************************************
+
+
+class TextCommand(Command):
+
+    def __init__(self):
+        super().__init__()
+        self.format = "=/set |/content|text ~/of : +/text_item ~/to */rest"
+
+    def do_process(self):
+        text_name = self.params.get("text_item")
+        if text_name not in self.scene.data.images.keys():
+            print("Text image %s does not exist" % text_name)
+        else:
+            text_item = self.scene.data.images[text_name]
+            if text_item.__class__.__name__ != "TextImage":
+                print("Image %s is not a TextImage" % text_name)
+            else:
+                text_item.content = self.params.get("rest")
+                text_item.next_frame()
+
+# *************************************************************************************************
+#
+#    ########  #######  ##    ## ########
+#    ##       ##     ## ###   ##    ##
+#    ##       ##     ## ####  ##    ##
+#    ######   ##     ## ## ## ##    ##
+#    ##       ##     ## ##  ####    ##
+#    ##       ##     ## ##   ###    ##
+#    ##        #######  ##    ##    ##
+#
+# **************************************************************************************************
+
+
+class FontCommand(Command):
+
+    def __init__(self):
+        super().__init__()
+        self.format = "=/set =/font : +/feature ~/of +/text_item ~/to */rest"
+
+    def do_process(self):
+        text_name = self.params.get("text_item")
+        if text_name not in self.scene.data.images.keys():
+            print("Text image %s does not exist" % text_name)
+        else:
+            text_item = self.scene.data.images[text_name]
+            feature_name = self.params.get("feature")
+            if feature_name.startswith("col") or feature_name.startswith("back"):
+                colour_name = self.params.get("rest").lower().replace(" ", "")
+                if colour_name in colors.cnames.keys():
+                    if feature_name.startswith("c"):
+                        text_item.color = colors.cnames[colour_name]
+                    else:
+                        text_item.background_color = colors.cnames[colour_name]
+                else:
+                    print("Unknown colour %s" % colour_name)
+            elif feature_name == "style":
+                style_item = self.params.get("rest")
+                if style_item == "bold":
+                    text_item.text_font.bold = True
+                elif style_item == "italic":
+                    text_item.text_font.italic = True
+                elif style_item == "underline":
+                    text_item.text_font.underline = True
+                else:
+                    print("Unknown style %s" % style_item)
+            elif feature_name == "size":
+                text_item.text_font.point_size = int(self.params.get("rest"))
+            text_item.next_frame()  # Force re-rendering
+
 
 # *************************************************************************************************
 #

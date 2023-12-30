@@ -159,6 +159,43 @@ class GroupImage(ImageItem):
 
 # *************************************************************************************************
 #
+#    ######## ######## ##     ## ########
+#       ##    ##        ##   ##     ##
+#       ##    ##         ## ##      ##
+#       ##    ######      ###       ##
+#       ##    ##         ## ##      ##
+#       ##    ##        ##   ##     ##
+#       ##    ######## ##     ##    ##
+#
+# **************************************************************************************************
+
+
+class TextImage(ImageItem):
+
+    def __init__(self):
+        super().__init__()
+        if not pygame.font.get_init():
+            pygame.font.init()
+        self.font_face = pygame.font.get_default_font()
+        self.size = 24
+        self.text_font = None
+        self.content = ""
+        self.color = (255, 255, 255)
+        self.background_color = None
+        self.rebuild_font()
+
+    def move_to_frame(self, number):
+        self.surface = self.text_font.render(self.content, True, self.color, self.background_color)
+        self.image_rect = self.surface.get_rect()
+
+    def next_frame(self, advance_by=1):
+        self.move_to_frame(advance_by)
+
+    def rebuild_font(self):
+        self.text_font = pygame.font.Font(self.font_face, self.size)
+
+# *************************************************************************************************
+#
 #    ##     ##  #######  ##     ## #### ########
 #    ###   ### ##     ## ##     ##  ##  ##
 #    #### #### ##     ## ##     ##  ##  ##

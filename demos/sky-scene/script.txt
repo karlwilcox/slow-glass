@@ -46,6 +46,12 @@ end scene
         window background at $CENTREX, $CENTREY, $WIDTH, $HEIGHT
         move window background to 5277, $CENTREY in 3 minutes
         start grey-planes
+        create text hello
+        set content of hello to Hello World!
+        set font color of hello to blue
+        set font size of hello to 60
+        set font style of hello to underline
+        place hello at 500,500,0
 
 after 3 seconds
     start yellow-plane
