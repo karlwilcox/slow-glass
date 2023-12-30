@@ -14,6 +14,8 @@ that take place in the scene and the events that trigger them. Hence it is mostl
 a minmal number of "programming" constructs. The intention is that a Slow Glass script is both more understandable
 and shorter than the equivalent Python / Pygame code would be!
 
+No familiarity with Python coding is required for using Slow Glass, just some images, and a text editor.
+
 ## Getting Started
 
 ### Pre-requisites
