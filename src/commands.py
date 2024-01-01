@@ -974,6 +974,20 @@ class ShowCommand(Command):
             if s_tag is not None:
                 Command.globalData.sprites.get_sprite(s_tag).visible = True
 
+
+class ShowHideDurationCommand(Command):
+
+    def __init__(self):
+        super().__init__()
+        self.format = "|/show|hide : +/tag =/for */time"
+
+
+    def do_process(self):
+        command = self.params.command()
+
+
+
+
 # *************************************************************************************************
 #
 #    ########     ###    ##     ##  ######  ########       ## ########  ########  ######  ##     ## ##     ## ########

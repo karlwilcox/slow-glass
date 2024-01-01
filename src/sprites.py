@@ -231,6 +231,7 @@ class SpriteItem:
         self.light = self.Adjustable(0, 0, 100)
         self.blur = self.Adjustable(0, 0, 100)
         self.visible = True
+        self.visibilityTimer = self.Adjustable(-1, 0)
         self.paused = False
         self.animation_rate = self.Adjustable(0)
         self.last_frame_millis = Timer.millis()
@@ -339,6 +340,10 @@ class SpriteItem:
 
     def set_transition(self, type):
         pass
+
+    def change_visibility(self, seconds):
+        self.visible = not self.visible
+        self.visibilityTimer.set_target_value(0,)
 
     def zoom_to(self, width, height, seconds):
         if not self.windowed:

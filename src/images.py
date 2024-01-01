@@ -221,10 +221,12 @@ class Movie(ImageItem):
 
     def next_frame(self, advance_by=1):
         success = True
+        advance_by = abs(advance_by)
         while success:
             success, image = self.video.read()
             self.surface = pygame.Surface(image)
-            return
+            if --advance_by <= 0:
+                return
         # run out of frames, go back to the start
         self.init_video()
 
