@@ -35,6 +35,9 @@ scene grey-planes
         place grey-planes at 200,200,10 scale 30
         move grey-planes to 1000,0 in 10 seconds
         move grey3 to 1200,500 in 10 seconds
+
+    after 2 seconds
+        hide grey3 for 2 seconds
 end scene
 
 # main scene

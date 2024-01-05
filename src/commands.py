@@ -941,51 +941,26 @@ class StopCommand(Command):
 #
 # **************************************************************************************************
 
-class HideCommand(Command):
+class ShowHideCommand(Command):
     """
-        hide sprites... (hides sprite, but still active and updating)
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.format = "=/hide : >/list"
-
-    def do_process(self):
-        tag_list = self.params.get("list")
-        for tag in tag_list:
-            s_tag = self.scene.resolve_tag(tag, Command.globalData.sprites.keys())
-            if s_tag is not None:
-                Command.globalData.sprites.get_sprite(s_tag).visible = False
-
-
-class ShowCommand(Command):
-    """
-        show sprites... (reveals sprites in active list)
+        show/hide sprites... (hides sprite, but still active and updating)
     """
 
     def __init__(self):
         super().__init__()
-        self.format = "|/show|reveal : >/list"
+        self.format = "|/show|hide : +/tag ~/for */time"
 
     def do_process(self):
-        tag_list = self.params.get("list")
-        for tag in tag_list:
-            s_tag = self.scene.resolve_tag(tag, Command.globalData.sprites.keys())
-            if s_tag is not None:
-                Command.globalData.sprites.get_sprite(s_tag).visible = True
-
-
-class ShowHideDurationCommand(Command):
-
-    def __init__(self):
-        super().__init__()
-        self.format = "|/show|hide : +/tag =/for */time"
-
-
-    def do_process(self):
-        command = self.params.command()
-
-
+        tag = self.params.get("tag")
+        s_tag = self.scene.resolve_tag(tag, Command.globalData.sprites.keys())
+        if s_tag is None:
+            return
+        my_sprite = Command.globalData.sprites.get_sprite(s_tag)
+        my_sprite.visible = "show" in self.params.command
+        time_param = self.params.get("time")
+        if time_param is not None:
+            duration = timing.Duration(time_param).as_seconds()
+            my_sprite.set_visibility_duration(duration)
 
 
 # *************************************************************************************************
@@ -1080,15 +1055,19 @@ class CreateItemCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "=/create |/group|text : +/item_name"
+        self.format = "=/create |/group|text : +/item_name ~/from */content"
 
     def do_process(self):
         item_type = self.params.get("group")
         item_name = self.params.get("item_name")
+        content = self.params.get("content")
         if item_type == "group":
             self.scene.data.images[item_name] = images.GroupImage(self.scene, item_name)
         elif item_type == "text":
             self.scene.data.images[item_name] = images.TextImage()
+            if content is not None:
+                self.scene.data.images[item_name].content = content
+                self.scene.data.images[item_name].next_frame()
 
 # *************************************************************************************************
 #
