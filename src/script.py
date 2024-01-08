@@ -86,8 +86,6 @@ def read(data, filename=None, folder=None):
                             data.options["width"] = int(value)
                         elif argument.startswith("f"):
                             data.options["fullscreen"] = True
-                        elif argument.startswith("r"):
-                            data.options["rotate"] = value
                 else:  # must be an action, trigger or condition
                     if current_scene is None:
                         top_level.append(line)

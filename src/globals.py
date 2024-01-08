@@ -14,7 +14,7 @@ class Globals:
         self.vars = vars.Variables(self)
         self.command_dispatcher = dispatcher.Dispatcher()
         self.options = {"width": 1080, "height": 1920, "fullscreen": False,
-                        "rotate": False, "dir": DEFAULT_FOLDER, "file": DEFAULT_FILENAME,
+                        "dir": DEFAULT_FOLDER, "file": DEFAULT_FILENAME,
                         "help": False, "safe": SAFE_EVALUATION}
 
     def dump_options(self):

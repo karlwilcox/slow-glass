@@ -97,11 +97,6 @@ def main():
     pygame.mixer.init()
     screen = pygame.display.set_mode((globalData.options["width"],
                                       globalData.options["height"]))
-    rotation = str(globalData.options["rotate"]).lower()
-    if rotation.startswith("r") or rotation.startswith("l"):
-        temp = globalData.options["height"]
-        globalData.options["height"] = globalData.options["width"]
-        globalData.options["width"] = temp
     window = pygame.Surface((globalData.options["width"], globalData.options["height"]))
     grey = pygame.Color(127, 127, 127)
     clock = pygame.time.Clock()
@@ -112,12 +107,7 @@ def main():
         do_actions(globalData, timing.Timer.millis())
         clock.tick(FRAMERATE)
         globalData.sprites.display_all(window)
-        if rotation.startswith("r"):
-            screen.blit(pygame.transform.rotate(window, -90), (0, 0))
-        elif rotation.startswith("l"):
-            screen.blit(pygame.transform.rotate(window, 90), (0, 0))
-        else:
-            screen.blit(window, (0, 0))
+        screen.blit(window, (0, 0))
         pygame.display.update()
 
 
