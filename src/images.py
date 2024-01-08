@@ -145,14 +145,17 @@ class ImageFolder(ImageItem):
 
 class GroupImage(ImageItem):
 
-    def __init__(self, scene, group_name):
+    def __init__(self, scene, group_name, in_image_rect=None):
         super().__init__()
         self.group_name = group_name
         self.scene = scene
-        self.image_rect = pygame.Rect(0, 0, self.scene.data.options["width"], self.scene.data.options["height"])
+        if in_image_rect is not None:
+            self.image_rect = in_image_rect
+        else:
+            self.image_rect = pygame.Rect(0, 0, self.scene.data.options["width"], self.scene.data.options["height"])
 
     def move_to_frame(self, number):
-        self.surface = pygame.Surface((self.scene.data.options["width"], self.scene.data.options["height"]), pygame.SRCALPHA)
+        self.surface = pygame.Surface((self.image_rect.width, self.image_rect.height), pygame.SRCALPHA)
         self.scene.data.sprites.display_all(self.surface, self.group_name)
 
     def next_frame(self, advance_by=1):

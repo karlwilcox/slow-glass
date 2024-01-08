@@ -48,6 +48,8 @@ class ParamList:
             choices = None
             if optionality == ParamList.GETREST:
                 self.params[name] = " ".join(words[arg_pos:])
+                if len(self.params[name]) < 1:
+                    self.params[name] = None
                 continue
             if optionality == ParamList.GETLIST:
                 self.params[name] = words[arg_pos:]

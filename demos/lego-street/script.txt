@@ -24,41 +24,40 @@ vehicles -> road traffic
 + others as needed
 */
 
-
+display width 1080
+dipslay height 1920
+display fullscreen
 
 # Main scene - load & display background
 begin
-    load runner.png as runner split 5 by 2
-    place runner at 100,700,0
-    set animation rate of runner to 0.5
-    move runner to 1200,700 in 20 seconds
+   # load runner.png named runner split 5 by 2
+   # place runner at 100,700,0
+   # set animation rate of runner to 0.5
+   # move runner to 1200,700 in 20 seconds
 
     from background
-    load background.png as background
-    load road-distant.png as road-distant
-    load road-near.png as road-near
-    load far-houses-left.png as block-far-l
-    load far-houses-right.png as block-far-r
-    load block-near-right.png as block-near-r
+    load background.png named background
+    load road-distant.png named-distant
+    load road-near.png named road-near
+    load far-houses-left.png named block-far-l
+    load far-houses-right.png named block-far-r
+    load block-near-right.png named block-near-r
 
-    place background at $CENTREX,$CENTREY,1000
+    put background as background
     place block-far-l at 317,845,800
     place block-far-r at 776,844,801
     place road-distant at 497, 1281,750
     place road-near at 540,1661,550
     place block-near-r at 935,1021,500
 
-    show background block-far-l block-far-r road-distant road-near block-near-r
-
 
 scene refuse-truck-rtol
     begin
         from vehicles
-        load refuse-truck-rtol.png as refuse-truck-rtol
-        load truckdriveby.wav as truck-noise
-        place refuse-truck-rtol as truck at 1100,1190,720
+        load refuse-truck-rtol.png named refuse-truck-rtol
+        load truckdriveby.wav named truck-noise
+        place refuse-truck-rtol named truck at 1100,1190,720
         move truck to 0,1190 in a quarter of a minute
-        show truck
 
     after 2 seconds
         play truck-noise
@@ -71,10 +70,10 @@ end scene
 scene passenger-train-ltor
     begin
         from trains
-        load railroadcrossing.wav as rr-crossing
-        load trainpassslow.wav as train-pass
-        load loco-ltor.png as loco-ltr
-        # load coach-1.png as coach1
+        load railroadcrossing.wav named rr-crossing
+        load trainpassslow.wav named train-pass
+        load loco-ltor.png named loco-ltr
+        # load coach-1.png named coach1
         place loco-ltr at -100,1227,620
         # start barriers
         play rr-crossing
@@ -94,7 +93,7 @@ every 20 seconds
     # if $PERCENT > 50 then start refuse-truck-rtol
     start refuse-truck-rtol
 
-after 20 seconds
+after 10 seconds
     start passenger-train-ltor
 
 /*

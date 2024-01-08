@@ -30,7 +30,7 @@ scene grey-planes
         place grey-plane named grey1 at 400,400,100
         place grey-plane named grey2 at 600,600,110
         place grey-plane named grey3 at 500,500,115
-        create group grey-planes
+        create group grey-planes size 800,800
         add to group grey-planes grey1 grey2 grey3
         place grey-planes at 200,200,10 scale 30
         move grey-planes to 1000,0 in 10 seconds

@@ -248,3 +248,50 @@ class Now(Timer):
         self.hour = now.hour
         self.minute = now.minute
         self.second = now.second
+
+# *************************************************************************************************
+#
+#     ######  #### ######## ########
+#    ##    ##  ##       ##  ##
+#    ##        ##      ##   ##
+#     ######   ##     ##    ######
+#          ##  ##    ##     ##
+#    ##    ##  ##   ##      ##
+#     ######  #### ######## ########
+#
+# **************************************************************************************************
+
+
+class Size:
+    the_same_width = None
+    the_same_height = None
+
+    def __init__(self, size_string):
+        self.width = None
+        self.height = None
+        words = re.split(WORD_SPLIT, size_string.lower())
+        if "same" in words:
+            self.width = Size.the_same_width
+            self.height = Size.the_same_height
+            return
+        # look for a number
+        word_count = 0
+        measure = "width"
+        while word_count < len(words):
+            if words[word_count].startswith("h"):
+                measure = "height"
+            elif words[word_count].startswith("w"):
+                measure = "width"
+            elif words[word_count] in ("by", "and"):
+                pass
+            elif words[word_count].isnumeric():
+                if measure == "width":
+                    self.width = int(words[word_count])
+                    measure = "height"
+                else:
+                    self.height = int(words[word_count])
+                    self.measure = "width"
+            word_count += 1
+
+    def as_tuple(self):
+        return self.width, self.height

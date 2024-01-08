@@ -129,6 +129,9 @@ class LoadCommand(Command):
         if tag is None:
             tag, ext = os.path.splitext(os.path.basename(filename))
         tag = self.scene.make_tag(tag)
+        if tag in Command.globalData.images.keys():
+            # Silent return, don't reload existing images, used unload first
+            return True
         if os.path.isdir(filename):
             Command.globalData.images[tag] = images.ImageFolder(filename)
         elif filename.lower().endswith((".jpg", ".jpeg", ".png", ".svg")):
@@ -961,6 +964,8 @@ class ShowHideCommand(Command):
         if time_param is not None:
             duration = timing.Duration(time_param).as_seconds()
             my_sprite.set_visibility_duration(duration)
+        else:
+            my_sprite.visibilityTimer = None
 
 
 # *************************************************************************************************
@@ -1055,14 +1060,19 @@ class CreateItemCommand(Command):
 
     def __init__(self):
         super().__init__()
-        self.format = "=/create |/group|text : +/item_name ~/from */content"
+        self.format = "=/create |/group|text : +/item_name |/from|size */content"
 
     def do_process(self):
         item_type = self.params.get("group")
         item_name = self.params.get("item_name")
         content = self.params.get("content")
         if item_type == "group":
-            self.scene.data.images[item_name] = images.GroupImage(self.scene, item_name)
+            if content is not None and content != "":
+                size = timing.Size(content).as_tuple()
+                image_rect = pygame.Rect(0, 0, size[0], size[1])
+                self.scene.data.images[item_name] = images.GroupImage(self.scene, item_name, image_rect)
+            else:
+                self.scene.data.images[item_name] = images.GroupImage(self.scene, item_name)
         elif item_type == "text":
             self.scene.data.images[item_name] = images.TextImage()
             if content is not None:

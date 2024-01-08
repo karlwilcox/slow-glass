@@ -221,6 +221,9 @@ class SpriteItem:
         self.x = self.Adjustable(centre_x)
         self.y = self.Adjustable(centre_y)
         self.image = SpriteItem.globalData.images[itag]
+        if self.image.image_rect is None:
+            print("No image rect %s" % stag)
+            return
         w = width or self.image.image_rect.width
         h = height or self.image.image_rect.height
         self.w = self.Adjustable(w)
